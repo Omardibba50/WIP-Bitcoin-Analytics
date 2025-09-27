@@ -5,7 +5,7 @@ Full-stack application for BTC price tracking and prediction.
 - Backend: Node.js (ES Modules), Express 5, SQLite (better-sqlite3)
 - Frontend: React (Vite) dashboard with Chart.js
 
-All payment-related code and smart contract tooling have been removed to keep the codebase focused on data APIs and the dashboard UI.
+
 
 
 ## Contents
