@@ -11,14 +11,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "better-sqlite3": "^12.4.1",
     "cors": "^2.8.5",
-    "ethers": "^6.13.7",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0"
   },
-  "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.2.3",
-    "dotenv": "^16.5.0",
-    "hardhat": "^2.23.0"
-  },
+  "devDependencies": {},
   "description": ""
 }
