@@ -43,6 +43,7 @@ export default function MainDashboard() {
     currentPrice: 0,
     high: 0,
     low: 0,
+    ath: 0,
     change24h: 0,
     volume: 0,
   });
@@ -77,7 +78,9 @@ export default function MainDashboard() {
         const open24h = sorted[0].open;
         const change24h = ((currentPrice - open24h) / open24h) * 100;
         const volume = sorted.reduce((acc, d) => acc + (d.volume || 0), 0);
-        setSummary({ currentPrice, high, low, change24h, volume });
+        // All-time high from the returned dataset (API may return full history)
+        const ath = Math.max(...sorted.map((d) => d.high));
+        setSummary({ currentPrice, high, low, change24h, volume, ath });
       }
 
       const formatted = sorted.map((d) => ({
@@ -146,64 +149,64 @@ export default function MainDashboard() {
     { title: "Current Price", value: `$${summary.currentPrice.toLocaleString()}`, color: "#00b3ff" },
     { title: "24h Change", value: `${summary.change24h >= 0 ? "+" : ""}${summary.change24h.toFixed(2)}%`, color: summary.change24h >= 0 ? "#4ade80" : "#ff6b6b" },
     { title: "24h High", value: `$${summary.high.toLocaleString()}`, color: "#ffd700" },
+    { title: "All-time High", value: `$${summary.ath.toLocaleString()}`, color: "#ffb86b" },
     { title: "24h Low", value: `$${summary.low.toLocaleString()}`, color: "#ff6347" },
     { title: "Volume", value: summary.volume.toLocaleString(), color: "#00ffff" },
   ];
 
   return (
-    <div style={{ fontFamily: "Poppins,sans-serif", backgroundColor: "#121212", color: "#fff", minHeight: "100vh" }}>
+    <div className="app-root" style={{ fontFamily: "Poppins,sans-serif", backgroundColor: "#121212", color: "#fff", minHeight: "100vh" }}>
       {/* Header */}
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 2rem", borderBottom: "1px solid #222" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="#00b3ff"><circle cx="12" cy="12" r="10" /></svg>
-          <span style={{ fontSize: "1.4rem", fontWeight: "bold" }}>Market Dashboard</span>
+      <header className="site-header">
+        <div className="brand">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="#00b3ff" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg>
+          <span className="brand-title">Market Dashboard</span>
         </div>
-        <ul className="desktop-menu" style={{ display: "flex", gap: "2rem", listStyle: "none" }}>
-          {["Dashboard","Predictions","Analytics","Market"].map(link => (
-            <li key={link}><a href={`#${link.toLowerCase()}`} style={{ color: "#ccc", textDecoration: "none", fontWeight: 500 }}>{link}</a></li>
-          ))}
-        </ul>
-        <button onClick={() => setMobileNavOpen(!mobileNavOpen)} style={{ display: "flex", flexDirection: "column", gap: "5px", background: "none", border: "none", cursor: "pointer" }}>
-          <span style={{ width: "28px", height: "3px", background: "#fff" }}></span>
-          <span style={{ width: "28px", height: "3px", background: "#fff" }}></span>
-          <span style={{ width: "28px", height: "3px", background: "#fff" }}></span>
+        <nav className="nav">
+          <ul className="desktop-menu">
+            {["Dashboard","Predictions","Analytics","Market"].map(link => (
+              <li key={link}><a href={`#${link.toLowerCase()}`}>{link}</a></li>
+            ))}
+          </ul>
+        </nav>
+        <button className="mobile-toggle" onClick={() => setMobileNavOpen(!mobileNavOpen)} aria-expanded={mobileNavOpen} aria-label="Toggle navigation">
+          <span className="bar" />
+          <span className="bar" />
+          <span className="bar" />
         </button>
       </header>
 
       {/* Mobile Menu */}
-      <div style={{
-        position: "fixed", top: 0, right: mobileNavOpen ? 0 : "-100%", height: "100%", width: "250px",
-        backgroundColor: "#1a1a1a", transition: "0.3s", padding: "4rem 1.5rem", display: "flex", flexDirection: "column", gap: "1.5rem", zIndex: 1000
-      }}>
-        {["Dashboard","Predictions","Analytics","Market"].map(link => (
-          <a key={link} href={`#${link.toLowerCase()}`} style={{ color:"#ccc", textDecoration:"none", fontSize:"1.2rem" }}
-            onClick={()=>setMobileNavOpen(false)}>{link}</a>
-        ))}
+      <div className={`mobile-menu ${mobileNavOpen ? 'open' : ''}`} role="dialog" aria-modal="true">
+        <div className="mobile-menu-inner">
+          {["Dashboard","Predictions","Analytics","Market"].map(link => (
+            <a key={link} href={`#${link.toLowerCase()}`} className="mobile-link" onClick={()=>setMobileNavOpen(false)}>{link}</a>
+          ))}
+        </div>
       </div>
 
       {/* Filters */}
-      <section style={{ display:"flex", gap:"1rem", flexWrap:"wrap", padding:"1rem 2rem", alignItems:"center" }}>
-        <input type="text" placeholder="Symbol (BTC)" value={searchTerm} onChange={e=>setSearchTerm(e.target.value.toUpperCase())}
-          style={{ padding:"0.5rem 0.8rem", borderRadius:6, border:"1px solid #333", backgroundColor:"#1f1f1f", color:"#fff", flex:"1 1 120px" }} />
-        <label style={{ color:"#ccc" }}>From:<input type="date" value={fromDate} onChange={e=>setFromDate(e.target.value)} style={{ marginLeft:4, padding:"0.4rem", borderRadius:6, border:"1px solid #333", backgroundColor:"#1f1f1f", color:"#fff" }}/></label>
-        <label style={{ color:"#ccc" }}>To:<input type="date" value={toDate} onChange={e=>setToDate(e.target.value)} style={{ marginLeft:4, padding:"0.4rem", borderRadius:6, border:"1px solid #333", backgroundColor:"#1f1f1f", color:"#fff" }}/></label>
-        <button onClick={fetchData} style={{ padding:"0.5rem 1rem", backgroundColor:"#00b3ff", border:"none", borderRadius:6, color:"#fff", cursor:"pointer"}}>Apply</button>
+      <section className="filters">
+        <input className="filter-input" type="text" placeholder="Symbol (BTC)" value={searchTerm} onChange={e=>setSearchTerm(e.target.value.toUpperCase())} />
+        <label className="filter-label">From:<input className="filter-input" type="date" value={fromDate} onChange={e=>setFromDate(e.target.value)} /></label>
+        <label className="filter-label">To:<input className="filter-input" type="date" value={toDate} onChange={e=>setToDate(e.target.value)} /></label>
+        <button className="apply-btn" onClick={fetchData}>Apply</button>
       </section>
 
       {/* Info Cards */}
-      <section style={{ display:"flex", flexWrap:"wrap", gap:"1rem", padding:"1rem 2rem", marginTop:"1rem" }}>
+      <section className="info-cards">
         {infoCards.map((card, idx)=>(
-          <div key={idx} style={{ flex:"1 1 150px", backgroundColor:"#1e1e1e", padding:"1rem", borderRadius:8, display:"flex", flexDirection:"column", gap:"0.5rem" }}>
-            <span style={{ fontSize:"0.9rem", color:"#888" }}>{card.title}</span>
-            <span style={{ fontSize:"1.3rem", fontWeight:"bold", color:card.color }}>{card.value}</span>
+          <div key={idx} className="info-card" style={{ backgroundColor:"#1e1e1e" }}>
+            <span className="card-title">{card.title}</span>
+            <span className="card-value" style={{ color: card.color }}>{card.value}</span>
           </div>
         ))}
       </section>
 
       {/* Candlestick */}
-      <main style={{ padding:"2rem" }}>
-        {loading?<p style={{textAlign:"center", color:"#aaa"}}>Loading chart data...</p>:
-          <section style={{ backgroundColor:"#1e1e1e", borderRadius:12, padding:"1rem", height:"500px" }}>
+      <main className="main-content">
+        {loading?<p className="loading">Loading chart data...</p>:
+          <section className="chart-card">
             <Chart type="candlestick" {...getCandlestickConfig(dataPrices, `${searchTerm} Price`)}/>
           </section>
         }
@@ -213,20 +216,16 @@ export default function MainDashboard() {
       <section id="market" style={{ padding: "2rem" }}>
         <h2 style={{ color: "#00b3ff" }}>Market Insights</h2>
         {btcVsGold.labels.length > 0 && (
-          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+          <div className="chart-row">
             {/* BTC vs Gold / BTC in Gold */}
-            <div style={{ flex: "1 1 300px", backgroundColor: "#1e1e1e", padding: "1rem", borderRadius: 12 }}>
-              <h3 style={{ color: "#00b3ff", fontSize: "1rem" }}>BTC vs Gold</h3>
-              <Chart
-                type="line"
-                {...getComparisonChartConfig()}
-                style={{ height: "200px" }}
-              />
+            <div className="small-card">
+              <h3 className="small-card-title">BTC vs Gold</h3>
+              <Chart type="line" {...getComparisonChartConfig()} style={{ height: "200px" }} />
             </div>
 
             {/* Lightning Network Sample */}
-            <div style={{ flex: "1 1 300px", backgroundColor: "#1e1e1e", padding: "1rem", borderRadius: 12 }}>
-              <h3 style={{ color: "#00b3ff", fontSize: "1rem" }}>Lightning Network (Public)</h3>
+            <div className="small-card">
+              <h3 className="small-card-title">Lightning Network (Public)</h3>
               <Chart
                 type="line"
                 data={{
