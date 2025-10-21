@@ -1,7 +1,7 @@
 // Price routes
 
 import express from 'express';
-import { getLatestPrice, getHistory } from '../controllers/priceController.js';
+import { getLatestPrice, getHistory, getAllTimeHigh } from '../controllers/priceController.js';
 import { getPriceSummary } from '../controllers/summaryController.js';
 
 const router = express.Router();
@@ -14,5 +14,8 @@ router.get('/history', getHistory);
 
 // GET /api/prices/summary
 router.get('/summary', getPriceSummary);
+
+// GET /api/prices/ath (all-time high)
+router.get('/ath', getAllTimeHigh);
 
 export default router;

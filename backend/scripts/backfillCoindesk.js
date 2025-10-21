@@ -6,11 +6,11 @@ import { initDb, getDb } from "../db.js";
 
 const API_KEY = process.env.COINDESK_API_KEY;
 if (!API_KEY) {
-  console.error("❌ Missing COINDESK_API_KEY in .env");
+  console.error("Missing COINDESK_API_KEY in .env");
   process.exit(1);
 }
 
-// Dynamic import fetch
+// Dynamic import for fetch (ESM compatible)
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
@@ -35,12 +35,8 @@ async function fetchCoindeskOhlcvData({
     response_format,
   });
 
-  if (groups?.length) {
-    params.append("groups", groups.join(","));
-  }
-  if (to_ts) {
-    params.append("to_ts", to_ts.toString());
-  }
+  if (groups?.length) params.append("groups", groups.join(","));
+  if (to_ts) params.append("to_ts", to_ts.toString());
 
   const url = `https://data-api.coindesk.com/index/cc/v1/historical/days?${params.toString()}`;
 
@@ -54,10 +50,11 @@ async function fetchCoindeskOhlcvData({
     const errText = await resp.text().catch(() => "");
     throw new Error(`API error ${resp.status} - ${errText}`);
   }
+
   const json = await resp.json();
   const entries = json?.Data || json?.data || [];
   if (!entries.length) {
-    console.warn("⚠️ No OHLCV data returned");
+    console.warn("No OHLCV data returned");
     return [];
   }
 
@@ -96,6 +93,7 @@ function insertOhlcvData(data) {
     (timestamp, open, high, low, close, volume, quoteVolume)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
+
   const insertMany = db.transaction((rows) => {
     for (const r of rows) {
       insert.run(
@@ -112,19 +110,27 @@ function insertOhlcvData(data) {
   insertMany(data);
 }
 
-(async () => {
-  initDb();
-  createOhlcvTable();
-
+async function updateOhlcvData() {
   try {
+    console.log(`\n[${new Date().toLocaleTimeString()}] Fetching new data...`);
     const data = await fetchCoindeskOhlcvData({ limit: 30 });
-    console.log(`✅ Fetched ${data.length} entries.`);
     insertOhlcvData(data);
-    console.log("✅ Inserted data into database.");
+    console.log("✅ Data updated successfully.");
   } catch (err) {
     console.error("❌ Error fetching/inserting:", err.message || err);
   }
-})();
+}
 
-// ✅ Export so server.js can import it
-export { createOhlcvTable };
+// Run automatically if executed directly (node backfillCoindesk.js)
+if (import.meta.url === `file://${process.argv[1]}`) {
+  (async () => {
+    initDb();
+    createOhlcvTable();
+
+    await updateOhlcvData();
+    setInterval(updateOhlcvData, 5 * 60 * 1000);
+  })();
+}
+
+// ✅ Export for use in server.js
+export { createOhlcvTable, updateOhlcvData };
