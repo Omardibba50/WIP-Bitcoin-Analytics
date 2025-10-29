@@ -2,15 +2,10 @@
   "name": "backend",
   "version": "1.0.0",
   "type": "module",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-     "migrate": "prisma migrate deploy"
+    "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "better-sqlite3": "^12.4.1",
     "chart.js": "^4.5.0",
@@ -19,6 +14,5 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "node-fetch": "^3.3.2"
-  },
-  "description": ""
+  }
 }
