@@ -20,10 +20,11 @@ jobs:
       - name: Install dependencies
         working-directory: ./backend
         run: npm ci
-        
-      - name: Run database migration
-        working-directory: ./backend
-        run: npm run migrate
+
+      # Removed the migration step since better-sqlite3 handles table creation automatically
+      # - name: Run database migration
+      #   working-directory: ./backend
+      #   run: npm run migrate
 
   test-frontend:
     runs-on: ubuntu-latest
