@@ -20,7 +20,7 @@ export async function getLatestPrice(req, res) {
           const price = json?.[id]?.usd ?? null;
           if (price != null) {
             const ts = Date.now();
-            try { insertPrice(symbol, 'coingecko', price, ts); } catch (_) {}
+            try { insertPrice(symbol, price, ts, 'coingecko'); } catch (_) {}
             data = { symbol, source: 'coingecko', price, ts };
           }
         }

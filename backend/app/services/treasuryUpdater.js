@@ -5,6 +5,8 @@ import { getLatestPrice } from '../db/pricesDb.js';
 
 let updateInterval = null;
 const UPDATE_INTERVAL = 3600000; // 1 hour in milliseconds
+let consecutiveErrors = 0;
+const MAX_ERROR_LOGS = 3;
 
 export function startTreasuryUpdater() {
   if (updateInterval) {
@@ -43,8 +45,19 @@ async function updateTreasuries() {
     const freshData = await fetchTreasuryData(btcPrice);
     
     if (!freshData || freshData.length === 0) {
-      console.warn('⚠️  No treasury data received, keeping existing data');
+      consecutiveErrors++;
+      if (consecutiveErrors <= MAX_ERROR_LOGS) {
+        console.warn('⚠️  No treasury data received, keeping existing data');
+      } else if (consecutiveErrors === MAX_ERROR_LOGS + 1) {
+        console.warn('⚠️  Suppressing further treasury update errors (will retry silently)...');
+      }
       return;
+    }
+    
+    // Reset error counter on success
+    if (consecutiveErrors > 0) {
+      console.log('✅ Treasury data fetch resumed');
+      consecutiveErrors = 0;
     }
     
     console.log(`   Received ${freshData.length} companies`);

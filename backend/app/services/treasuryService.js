@@ -30,9 +30,16 @@ async function scrapeBitcoinTreasuries() {
     const apiUrl = `https://api.scraperapi.com/?api_key=${scraperApiKey}&url=${targetUrl}&render=true`;
     
     console.log('🔄 Fetching corporate treasury data from bitcointreasuries.net...');
-    console.log('   (Using JavaScript rendering - this may take 10-15 seconds)');
+    console.log('   (Using JavaScript rendering - this may take up to 60 seconds)');
     
-    const response = await fetch(apiUrl);
+    // Add 60 second timeout for scraping (JS rendering takes time)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    
+    const response = await fetch(apiUrl, {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
       throw new Error(`ScraperAPI returned status: ${response.status}`);

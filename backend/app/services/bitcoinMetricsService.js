@@ -112,13 +112,13 @@ function estimateSupplyFromBlockHeight(height) {
 
 export async function fetchGoldMetrics(btcPriceUSD) {
   try {
-    // Fetch real-time gold price from metals-api.com or goldapi.io
-    let goldPricePerOz = 2650; // Fallback value
+    // Fetch real-time gold price from APIs (no fallback)
+    let goldPricePerOz = null;
     
-    try {
-      // Try GoldAPI.io if API key is available
-      const goldApiKey = process.env.GOLD_API_KEY;
-      if (goldApiKey) {
+    // Try GoldAPI.io if API key is available
+    const goldApiKey = process.env.GOLD_API_KEY;
+    if (goldApiKey) {
+      try {
         const goldResponse = await fetch('https://www.goldapi.io/api/XAU/USD', {
           headers: { 'x-access-token': goldApiKey }
         });
@@ -129,10 +129,16 @@ export async function fetchGoldMetrics(btcPriceUSD) {
             console.log('✅ Gold price fetched from GoldAPI.io:', goldPricePerOz);
           }
         }
-      } else {
-        // Try Metals-API.com if API key is available
-        const metalsApiKey = process.env.METALS_API_KEY;
-        if (metalsApiKey) {
+      } catch (err) {
+        console.warn('⚠️  GoldAPI.io failed:', err.message);
+      }
+    }
+    
+    // Try Metals-API.com if still no price
+    if (!goldPricePerOz) {
+      const metalsApiKey = process.env.METALS_API_KEY;
+      if (metalsApiKey) {
+        try {
           const response = await fetch(`https://metals-api.com/api/latest?access_key=${metalsApiKey}&base=USD&symbols=XAU`);
           if (response.ok) {
             const data = await response.json();
@@ -141,20 +147,32 @@ export async function fetchGoldMetrics(btcPriceUSD) {
               console.log('✅ Gold price fetched from Metals-API:', goldPricePerOz);
             }
           }
-        } else {
-          // No API key, use free goldprice.org
-          const response = await fetch('https://data-asg.goldprice.org/dbXRates/USD');
-          if (response.ok) {
-            const data = await response.json();
-            if (data.items && data.items[0] && data.items[0].xauPrice) {
-              goldPricePerOz = data.items[0].xauPrice;
-              console.log('✅ Gold price fetched from goldprice.org (free):', goldPricePerOz);
-            }
-          }
+        } catch (err) {
+          console.warn('⚠️  Metals-API failed:', err.message);
         }
       }
-    } catch (goldError) {
-      console.warn('⚠️  Failed to fetch live gold price, using fallback value:', goldError.message);
+    }
+    
+    // Try free goldprice.org as last resort
+    if (!goldPricePerOz) {
+      try {
+        const response = await fetch('https://data-asg.goldprice.org/dbXRates/USD');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.items && data.items[0] && data.items[0].xauPrice) {
+            goldPricePerOz = data.items[0].xauPrice;
+            console.log('✅ Gold price fetched from goldprice.org (free):', goldPricePerOz);
+          }
+        }
+      } catch (err) {
+        console.warn('⚠️  goldprice.org failed:', err.message);
+      }
+    }
+    
+    // If all APIs failed, return null
+    if (!goldPricePerOz) {
+      console.error('❌ Failed to fetch gold price from all sources');
+      return null;
     }
     
     // Get current BTC supply for market cap calculation
@@ -186,27 +204,21 @@ export async function fetchGoldMetrics(btcPriceUSD) {
 
 export async function fetchCorporateTreasuryTotals(btcPriceUSD) {
   try {
-    // Calculate from our database (accurate data updated regularly)
-    let totalBtcHeld = 2285604; // Accurate fallback from Clark Moody data (Oct 2025)
+    // Calculate from our database only - no fallback
+    let totalBtcHeld = 0;
     
     try {
       const { getAllTreasuries } = await import('../db/treasuriesDb.js');
       const treasuries = getAllTreasuries();
       if (treasuries && treasuries.length > 0) {
         // Sum all holdings from database
-        const dbTotal = treasuries.reduce((sum, t) => sum + (t.btc_holdings || 0), 0);
-        // Use database total if it's reasonable (> 1M BTC)
-        if (dbTotal > 1000000) {
-          totalBtcHeld = dbTotal;
-          console.log('✅ Corporate treasury total from database:', totalBtcHeld.toLocaleString(), 'BTC');
-        } else {
-          console.log('⚠️  Database total seems low, using fallback:', totalBtcHeld.toLocaleString(), 'BTC');
-        }
+        totalBtcHeld = treasuries.reduce((sum, t) => sum + (t.btc_holdings || 0), 0);
+        console.log(`✅ Corporate treasury total from database: ${totalBtcHeld.toLocaleString()} BTC (${treasuries.length} companies)`);
       } else {
-        console.log('ℹ️  No treasury data in database, using accurate fallback:', totalBtcHeld.toLocaleString(), 'BTC');
+        console.warn('⚠️  No treasury data in database yet');
       }
     } catch (dbError) {
-      console.warn('⚠️  Failed to fetch from database, using fallback:', dbError.message);
+      console.error('❌ Failed to fetch from database:', dbError.message);
     }
     
     // Get current supply for percentage calculation
