@@ -3,7 +3,7 @@ import { Bar, Doughnut } from 'react-chartjs-2';
 import { SkeletonCard, SkeletonChart } from './LoadingSpinner';
 import CompanyDetailModal from './CompanyDetailModal';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function CorporateTreasuries() {
   const [treasuries, setTreasuries] = useState([]);

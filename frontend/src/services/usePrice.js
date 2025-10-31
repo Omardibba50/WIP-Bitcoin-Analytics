@@ -5,11 +5,11 @@ export default function usePrice(symbol = 'BTC', intervalMs = 15000) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const mounted = useRef(true);
-
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   useEffect(() => {
     mounted.current = true;
     const envBase = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) ? import.meta.env.VITE_API_BASE : '';
-    const bases = [envBase, ''].filter(Boolean).concat(['http://localhost:5000']);
+    const bases = [envBase, ''].filter(Boolean).concat([API_BASE_URL]);
 
     async function fetchPrice() {
       setLoading(true);

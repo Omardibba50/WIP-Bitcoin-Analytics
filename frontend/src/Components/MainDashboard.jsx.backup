@@ -7,16 +7,10 @@ import { Chart as ChartJS, LineElement, BarElement, CategoryScale, LinearScale, 
 import { CandlestickController, CandlestickElement } from 'chartjs-chart-financial';
 import 'chartjs-adapter-date-fns';
 
-// Import Child Components
+// Import Child Components (Assuming they exist)
 import BlockchainBlocks from './BlockchainBlocks';
-import CorporateTreasuries from './CorporateTreasuries';
+import CorporateTreasuries from './CorporateTreasuries'; // <-- CORRECTED: Removed typo './('./ and extra parenthesis
 import BitcoinMetrics from './BitcoinMetrics';
-import PriceCards from './PriceCards';
-import PriceChart from './PriceChart';
-import ModelChart from './ModelChart';
-
-// Import centralized API service
-import { priceApi, modelApi, predictionApi } from '../services/api';
 
 // Register all necessary chart elements
 ChartJS.register(
@@ -27,60 +21,64 @@ ChartJS.register(
 // Helper function to format date into timestamp (milliseconds)
 const dateToTimestamp = (date) => (date ? date.getTime() : null);
 
-// API Base URL
-// Use centralized API base via services/api.js; remove hardcoded base URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// --- API Service Functions (Standardized using fetch) ---
+const API_BASE_URL = 'http://localhost:5000/api';
 
-// Keep legacy API service for compatibility with existing code
 const apiService = {
     async getPriceSummary(symbol = 'BTC') {
-        const data = await priceApi.getSummary(symbol);
-        return { data };
+        const response = await fetch(`${API_BASE_URL}/prices/summary?symbol=${symbol}`);
+        if (!response.ok) throw new Error('Failed to fetch price summary');
+        return response.json();
     },
     async getPriceHistory(symbol = 'BTC', from, to, limit = 500) {
-        const data = await priceApi.getHistory(symbol, from, to, limit);
-        return { data };
+        let url = `${API_BASE_URL}/prices/history?symbol=${symbol}&limit=${limit}`;
+        if (from) url += `&from=${from}`;
+        if (to) url += `&to=${to}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch price history');
+        return response.json();
     },
     async getCoinDeskPriceData() {
-        // Proxy through backend endpoint for CoinDesk candles
         const response = await fetch(`${API_BASE_URL}/CoinDeskprices`);
         if (!response.ok) throw new Error('Failed to fetch CoinDesk prices');
         return response.json();
     },
-    async getModels() {
-        const data = await modelApi.getAll();
-        return { data };
+    // SIMULATED API: Fetch Lightning Network Capacity Data
+    async getLightningNetworkCapacity() {
+        const now = Date.now();
+        const history = [];
+        for (let i = 90; i >= 0; i--) {
+            const timestamp = now - (i * 24 * 60 * 60 * 1000);
+            const capacity = 3500 + i * 5 + Math.sin(i / 5) * 200;
+            history.push({ timestamp, capacity });
+        }
+        return { data: history };
+    },
+    // SIMULATED API: Fetch Hash Rate Data
+    async getChainSecurityMetrics() {
+        const now = Date.now();
+        const history = [];
+        for (let i = 90; i >= 0; i--) {
+            const timestamp = now - (i * 24 * 60 * 60 * 1000);
+            const hashRate = 0.8 + Math.random() * 0.4 + Math.cos(i / 15) * 0.15;
+            history.push({ timestamp, hashRate });
+        }
+        return { data: history };
     },
     async getPredictions(modelId, symbol = 'BTC') {
-        const data = await predictionApi.getByModel(modelId, symbol);
-        return { data };
-    },
-    async getLightningNetworkStats() {
-        const response = await fetch(`${API_BASE_URL}/lightning/stats`);
-        if (!response.ok) throw new Error('Failed to fetch Lightning Network stats');
+        const response = await fetch(`${API_BASE_URL}/predictions?modelId=${modelId}&symbol=${symbol}`);
+        if (!response.ok) throw new Error('Failed to fetch predictions');
         return response.json();
     },
-    async getChainSecurityMetrics(from, to) {
-        // Try backend first
-        try {
-            const url = `${API_BASE_URL}/metrics/hashrate?from=${from || ''}&to=${to || ''}`;
-            const res = await fetch(url);
-            if (res.ok) return res.json();
-        } catch (_) {}
-        // Fallback: blockchain.com public API (may have CORS restrictions)
-        try {
-            const res = await fetch(`${API_BASE_URL}/proxy/hashrate?timespan=60days`);
-            if (res.ok) {
-                const json = await res.json();
-                return { data: json.data || [] };
-            }
-        } catch (_) {}
-        return { data: [] };
+    async getModels() {
+        const response = await fetch(`${API_BASE_URL}/models`);
+        if (!response.ok) throw new Error('Failed to fetch models');
+        return response.json();
     },
     async getAllTimeHigh(symbol = 'BTC') {
         const response = await fetch(`${API_BASE_URL}/prices/ath?symbol=${symbol}`);
         if (!response.ok) throw new Error('Failed to fetch all-time high');
-        return response.json(); // Already has {data: ...} format from backend
+        return response.json();
     }
 };
 
@@ -279,7 +277,6 @@ function MainDashboard() {
     const [allTimeHigh, setAllTimeHigh] = useState(null);
     const [mainChartOHLCData, setMainChartOHLCData] = useState([]);
     const [btcVsGold, setBtcVsGold] = useState({ labels: [], bitcoin: [], gold: [], btcPricedInGold: [] });
-    const [lightningStats, setLightningStats] = useState(null);
     const [lnCapacityHistory, setLnCapacityHistory] = useState([]);
     const [hashRateHistory, setHashRateHistory] = useState([]);
 
@@ -303,29 +300,13 @@ function MainDashboard() {
             const historyData = await apiService.getPriceHistory(tempSearchTerm, fromTimestamp, toTimestamp, 500);
             const history = historyData.data || [];
             
-            // BTC vs Gold Comparison - fetch gold data via free API (Stooq XAUUSD)
-            const labels = history.map(d => d.ts || d.timestamp);
+            // Format for BTC vs Gold Comparison (Using only price history)
+            const labels = history.map(d => d.ts);
             const bitcoin = history.map(d => d.price);
-            try {
-                // Fetch gold prices via backend proxy to avoid CORS
-                const res = await fetch(`${API_BASE_URL}/proxy/gold-xauusd`);
-                if (res.ok) {
-                    const json = await res.json();
-                    const records = json.data || [];
-                    const goldMap = new Map(records.map(r => [new Date(new Date(r.timestamp).toDateString()).getTime(), r.price]));
-                    const gold = labels.map(ts => goldMap.get(new Date(new Date(ts).toDateString()).getTime()) || null);
-                    const paired = labels.map((ts, i) => {
-                        const g = gold[i];
-                        const b = bitcoin[i];
-                        if (g && b) return b / g; return null;
-                    });
-                    setBtcVsGold({ labels, bitcoin, gold: gold.filter(v => v !== null), btcPricedInGold: paired.filter(v => v !== null) });
-                } else {
-                    setBtcVsGold({ labels, bitcoin, gold: [], btcPricedInGold: [] });
-                }
-            } catch (_) {
-                setBtcVsGold({ labels, bitcoin, gold: [], btcPricedInGold: [] });
-            }
+            // SIMULATE Gold Price correlated to BTC dates
+            const gold = history.map((_, i) => 1900 + Math.sin(i / 4) * 10 + Math.cos(i / 10) * 5);
+            const btcPricedInGold = bitcoin.map((b, i) => b / gold[i]);
+            setBtcVsGold({ labels, bitcoin, gold, btcPricedInGold });
 
 
             // Fetch Candlestick/OHLC Data from CoinDesk API
@@ -341,29 +322,12 @@ function MainDashboard() {
                 }));
             setMainChartOHLCData(formattedOHLC);
 
-            // Fetch Lightning Network stats
-            try {
-                const lnData = await apiService.getLightningNetworkStats();
-                const stats = lnData.data || null;
-                setLightningStats(stats);
-                // Derive capacity history if available
-                if (stats && Array.isArray(stats.capacityHistory)) {
-                    const filtered = stats.capacityHistory
-                        .map(d => ({ timestamp: d.timestamp || d.ts || d.time, capacity: d.capacity || d.value || d.btc }))
-                        .filter(d => d.timestamp)
-                        .filter(d => (!fromTimestamp || d.timestamp >= fromTimestamp) && (!toTimestamp || d.timestamp <= toTimestamp));
-                    setLnCapacityHistory(filtered);
-                } else {
-                    setLnCapacityHistory([]);
-                }
-            } catch (err) {
-                console.warn('Lightning Network data not available:', err.message);
-                setLightningStats(null);
-                setLnCapacityHistory([]);
-            }
+            // Fetch NEW Network Metrics Data (Filtered by date range)
+            const lnData = await apiService.getLightningNetworkCapacity();
+            setLnCapacityHistory(lnData.data.filter(d => d.timestamp >= fromTimestamp && d.timestamp <= toTimestamp));
 
-            const hashData = await apiService.getChainSecurityMetrics(fromTimestamp, toTimestamp);
-            setHashRateHistory((hashData.data || []).filter(d => (!fromTimestamp || d.timestamp >= fromTimestamp) && (!toTimestamp || d.timestamp <= toTimestamp)));
+            const hashData = await apiService.getChainSecurityMetrics();
+            setHashRateHistory(hashData.data.filter(d => d.timestamp >= fromTimestamp && d.timestamp <= toTimestamp));
 
             try {
                 const modelsData = await apiService.getModels();
@@ -497,7 +461,7 @@ function MainDashboard() {
             <div className="dashboard-bg" style={{ padding: '2rem', textAlign: 'center' }}>
                 <h2 style={{ color: '#ff6b6b' }}>Error Loading Dashboard 🛑</h2>
                 <p>{error}</p>
-                <p style={{ color: '#888', marginTop: '1rem' }}>Make sure your backend server is running at <strong>{API_BASE_URL}</strong></p>
+                <p style={{ color: '#888', marginTop: '1rem' }}>Make sure your backend server is running at **{API_BASE_URL}**</p>
                 <button onClick={() => window.location.reload()} style={{ padding: '0.5rem 1rem', backgroundColor: '#00b3ff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '1rem' }}>Retry</button>
             </div>
         );
@@ -594,28 +558,25 @@ function MainDashboard() {
                         </form>
 
 
-                        {/* Price Cards - Refactored Component */}
-                        <PriceCards 
-                            priceSummary={priceSummary}
-                            allTimeHigh={allTimeHigh}
-                            predictions={predictions}
-                            models={models}
-                        />
+                        {/* Tiles Section - Using the new class for grid responsiveness */}
+                        <section className="tiles-grid">
+                            {tiles.map((tile, idx) => (
+                                <div key={idx} className="tile-card section-card" style={{ padding: '1rem' }}>
+                                    <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '0.25rem', fontWeight: '600' }}> {tile.title} </div>
+                                    <div style={{ fontSize: '1.3rem', fontWeight: 'bold', color: tile.type === 'negative' ? '#ff6b6b' : tile.type === 'positive' ? '#4ade80' : tile.type === 'accent' ? '#00b3ff' : 'white' }}> {tile.value} </div>
+                                </div>
+                            ))}
+                        </section>
 
-                        
                         {/* Main Price Chart (Candlestick) */}
                         <section className="section-card" style={{ marginBottom: '1.5rem' }}>
                             <h2 style={{ margin: '0 0 0.75rem 0', fontSize: '1.1rem' }}> {searchTerm} Price History (Candlestick) 📈</h2>
                             <div className="chart-container-lg">
-                                {mainChartOHLCData && mainChartOHLCData.length > 0 ? (
-                                    <ChartComponent
-                                        type="candlestick"
-                                        data={getCandlestickConfig(mainChartOHLCData, `${searchTerm} Candlestick`).data}
-                                        options={getCandlestickConfig(mainChartOHLCData, `${searchTerm} Candlestick`).options}
-                                    />
-                                ) : (
-                                    <div style={{ color: '#888', textAlign: 'center', padding: '1rem' }}>No candlestick data available.</div>
-                                )}
+                                <ChartComponent
+                                    type="candlestick"
+                                    data={getCandlestickConfig(mainChartOHLCData, `${searchTerm} Candlestick`).data}
+                                    options={getCandlestickConfig(mainChartOHLCData, `${searchTerm} Candlestick`).options}
+                                />
                             </div>
                         </section>
 
@@ -623,7 +584,7 @@ function MainDashboard() {
                         <div className="tiles-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
                             {/* 1. Models Chart (Left Subgraph) */}
                             <section className="section-card">
-                                <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem' }}>Available Prediction Models </h3>
+                                <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem' }}>Available Prediction Models 📊</h3>
                                 <div className="chart-container-sm">
                                     <Bar data={{ labels: models.map(m => m.name || m.id), datasets: [{ label: 'Model Count', data: models.map(() => 1), backgroundColor: models.map((_, idx) => `rgba(${38 + idx * 60}, ${38 + idx * 60}, ${38 + idx * 80}, 0.85)`), borderRadius: 8 }] }}
                                         options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#888' }, grid: { color: '#333' } }, y: { ticks: { color: '#888' }, grid: { color: '#333' } } } }} />
@@ -632,94 +593,34 @@ function MainDashboard() {
 
                             {/* 2. BTC vs Gold Comparison (Right Subgraph) */}
                             <section className="section-card">
-                                <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem' }}>{searchTerm} vs Gold Comparison </h3>
+                                <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem' }}>{searchTerm} vs Gold Comparison 🥇</h3>
                                 <div className="chart-container-sm">
-                                    {(btcVsGold.bitcoin?.length || 0) > 0 ? (
-                                        <Line data={getComparisonChartConfig().data} options={getComparisonChartConfig().options} />
-                                    ) : (
-                                        <div style={{ color: '#888', textAlign: 'center', padding: '1rem' }}>No comparison data available.</div>
-                                    )}
+                                    <Line data={getComparisonChartConfig().data} options={getComparisonChartConfig().options} />
                                 </div>
                             </section>
                         </div>
 
                         {/* Network Metrics Subgraphs - Using the new class for grid responsiveness */}
                         <div className="tiles-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
-                            {/* 3. Lightning Network Snapshot Card (no chart) */}
+                            {/* 3. Lightning Network Capacity Chart */}
                             <section className="section-card">
-                                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                    <h3 style={{ margin: 0, fontSize: '1rem', letterSpacing: '0.3px' }}>Lightning Network</h3>
-                                    <span style={{ color: '#888', fontSize: '0.8rem' }}>Snapshot</span>
+                                <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem' }}>Lightning Network Capacity (BTC) ⚡</h3>
+                                <div className="chart-container-sm">
+                                    <Line
+                                        data={getSingleLineChartConfig(lnCapacityHistory, 'capacity', 'LN Capacity (BTC)', '#ff9900').data}
+                                        options={getSingleLineChartConfig(lnCapacityHistory, 'capacity', 'LN Capacity (BTC)', '#ff9900').options}
+                                    />
                                 </div>
-                                <div style={{ borderTop: '1px solid #333', margin: '0.25rem 0 0.75rem 0' }} />
-                                {lightningStats ? (
-                                    <div style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                                        gap: '0.75rem'
-                                    }}>
-                                        <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Total Capacity</div>
-                                            <div style={{ color: '#ffd27a', fontWeight: 700 }}>{(lightningStats.totalCapacity ?? 0).toFixed(2)} BTC</div>
-                                        </div>
-                                        <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Total Capacity (USD)</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(lightningStats.totalCapacityUSD ?? 0)}</div>
-                                        </div>
-                                        <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Total Nodes</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.totalNodes ?? 0).toLocaleString()}</div>
-                                        </div>
-                                        <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Total Channels</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.totalChannels ?? 0).toLocaleString()}</div>
-                                        </div>
-                                        <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Tor Capacity</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.torCapacity ?? 0).toFixed(2)} BTC</div>
-                                        </div>
-                                        <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Tor Nodes</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.torNodes ?? 0).toLocaleString()}</div>
-                                        </div>
-                                        <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Clearnet Nodes</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.clearnetNodes ?? 0).toLocaleString()}</div>
-                                        </div>
-                                        <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Unannounced Nodes</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.unannouncedNodes ?? 0).toLocaleString()}</div>
-                                        </div>
-                                        <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Avg Capacity</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.avgCapacity ?? 0).toFixed(4)} BTC</div>
-                                        </div>
-                                        <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Median Capacity</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.medianCapacity ?? 0).toFixed(4)} BTC</div>
-                                        </div>
-                                        <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Tor Capacity %</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.torCapacityPercentage ?? 0).toFixed(1)}%</div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div style={{ color: '#888' }}>No Lightning data available.</div>
-                                )}
                             </section>
 
                             {/* 4. Chain Security (Hash Rate) Chart */}
                             <section className="section-card">
-                                <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem' }}>Hash Rate (Exahashes/s) </h3>
+                                <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem' }}>Hash Rate (Exahashes/s) ⛏️</h3>
                                 <div className="chart-container-sm">
-                                    {(hashRateHistory?.length || 0) > 0 ? (
-                                        <Line
-                                            data={getSingleLineChartConfig(hashRateHistory, 'hashRate', 'Hash Rate (EH/s)', '#4ade80').data}
-                                            options={getSingleLineChartConfig(hashRateHistory, 'hashRate', 'Hash Rate (EH/s)', '#4ade80').options}
-                                        />
-                                    ) : (
-                                        <div style={{ color: '#888', textAlign: 'center', padding: '1rem' }}>No hash rate data.</div>
-                                    )}
+                                    <Line
+                                        data={getSingleLineChartConfig(hashRateHistory, 'hashRate', 'Hash Rate (EH/s)', '#4ade80').data}
+                                        options={getSingleLineChartConfig(hashRateHistory, 'hashRate', 'Hash Rate (EH/s)', '#4ade80').options}
+                                    />
                                 </div>
                             </section>
                         </div>
@@ -728,15 +629,15 @@ function MainDashboard() {
                         {predictions.length > 0 && (
                             <div style={{ marginBottom: '1.5rem' }}>
                                 <section className="section-card">
-                                    <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem' }}>Latest Predictions </h3>
+                                    <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem' }}>Latest Predictions 🔮</h3>
                                     <div className="predictions-scroll-container">
-                                        {predictions.slice(0, 5).map((prediction) => (
-                                            <div key={prediction.id || `${prediction.horizon}-${prediction.timestamp || ''}`} className="prediction-card">
+                                        {predictions.slice(0, 5).map((prediction, idx) => (
+                                            <div key={idx} className="prediction-card">
                                                 <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#00b3ff', marginBottom: '0.25rem' }}>
                                                     {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(prediction.predicted_price)}
                                                 </div>
                                                 <div style={{ fontSize: '0.8rem', color: '#4ade80', marginBottom: '0.5rem' }}>
-                                                    Confidence: <strong>{prediction.confidence != null ? (prediction.confidence * 100).toFixed(1) : '—'}%</strong>
+                                                    Confidence: **{prediction.confidence != null ? (prediction.confidence * 100).toFixed(1) : '—'}%**
                                                 </div>
                                                 <div style={{ fontSize: '0.75rem', color: '#888' }}> Horizon: {prediction.horizon} </div>
                                             </div>

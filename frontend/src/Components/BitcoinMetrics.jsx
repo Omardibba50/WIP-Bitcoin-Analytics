@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SkeletonCard } from './LoadingSpinner';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function BitcoinMetrics() {
   const [metrics, setMetrics] = useState(null);
@@ -25,7 +25,7 @@ function BitcoinMetrics() {
     };
 
     fetchMetrics();
-    const interval = setInterval(fetchMetrics, 300000); // Update every 5 minutes
+    const interval = setInterval(fetchMetrics, 300000); 
     return () => clearInterval(interval);
   }, []);
 
@@ -38,6 +38,7 @@ function BitcoinMetrics() {
 
   if (loading && !metrics) {
     return (
+      
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ 
           display: 'grid', 
