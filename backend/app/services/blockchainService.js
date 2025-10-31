@@ -2,8 +2,15 @@
 
 export async function fetchLatestBlocks(count = 10) {
   try {
-    // Using mempool.space API (more reliable)
-    const response = await fetch('https://mempool.space/api/blocks');
+    // Using mempool.space API (more reliable) with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    
+    const response = await fetch('https://mempool.space/api/blocks', {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    
     if (!response.ok) throw new Error('Failed to fetch blocks');
     
     const blocks = await response.json();
@@ -19,10 +26,17 @@ export async function fetchLatestBlocks(count = 10) {
       difficulty: block.difficulty || 0
     }));
   } catch (error) {
-    console.error('Error fetching blocks:', error);
-    // Fallback to blockchain.info API
+    console.error('Error fetching blocks:', error.message);
+    // Fallback to blockchain.info API with timeout
     try {
-      const response = await fetch(`https://blockchain.info/blocks/${Date.now()}?format=json`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      
+      const response = await fetch(`https://blockchain.info/blocks/${Date.now()}?format=json`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
       if (!response.ok) throw new Error('Blockchain.info API failed');
       
       const blocks = await response.json();

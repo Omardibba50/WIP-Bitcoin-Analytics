@@ -18,24 +18,14 @@ export async function getSupplyMetrics(req, res) {
 
 export async function getGoldMetrics(req, res) {
   try {
-    // Get current BTC price
+    // Get current BTC price from database
     const priceData = getLatestPrice('BTC');
-    let btcPrice = 67000; // Default fallback
     
-    if (priceData && priceData.price) {
-      btcPrice = priceData.price;
-    } else {
-      // Try to fetch fresh price
-      try {
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
-        if (response.ok) {
-          const data = await response.json();
-          btcPrice = data.bitcoin?.usd || btcPrice;
-        }
-      } catch (err) {
-        console.error('Failed to fetch BTC price:', err);
-      }
+    if (!priceData || !priceData.price) {
+      return res.status(503).json({ error: 'BTC price data not available' });
     }
+    
+    const btcPrice = priceData.price;
     
     const metrics = await fetchGoldMetrics(btcPrice);
     
@@ -52,24 +42,14 @@ export async function getGoldMetrics(req, res) {
 
 export async function getTreasuryTotals(req, res) {
   try {
-    // Get current BTC price
+    // Get current BTC price from database
     const priceData = getLatestPrice('BTC');
-    let btcPrice = 67000; // Default fallback
     
-    if (priceData && priceData.price) {
-      btcPrice = priceData.price;
-    } else {
-      // Try to fetch fresh price
-      try {
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
-        if (response.ok) {
-          const data = await response.json();
-          btcPrice = data.bitcoin?.usd || btcPrice;
-        }
-      } catch (err) {
-        console.error('Failed to fetch BTC price:', err);
-      }
+    if (!priceData || !priceData.price) {
+      return res.status(503).json({ error: 'BTC price data not available' });
     }
+    
+    const btcPrice = priceData.price;
     
     const metrics = await fetchCorporateTreasuryTotals(btcPrice);
     
@@ -86,13 +66,14 @@ export async function getTreasuryTotals(req, res) {
 
 export async function getAllMetrics(req, res) {
   try {
-    // Get current BTC price
+    // Get current BTC price from database
     const priceData = getLatestPrice('BTC');
-    let btcPrice = 67000;
     
-    if (priceData && priceData.price) {
-      btcPrice = priceData.price;
+    if (!priceData || !priceData.price) {
+      return res.status(503).json({ error: 'BTC price data not available' });
     }
+    
+    const btcPrice = priceData.price;
     
     // Fetch all metrics
     const [supply, gold, treasury] = await Promise.all([

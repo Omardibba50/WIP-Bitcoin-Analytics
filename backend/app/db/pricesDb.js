@@ -14,7 +14,7 @@ export function getLatestPrice(symbol) {
 
 export function getHistory(symbol, from = 0, to = Date.now(), limit = 500) {
   const d = getDb();
-  const rows = d.prepare('SELECT price, ts, source FROM prices WHERE symbol = ? AND ts BETWEEN ? AND ? ORDER BY ts ASC LIMIT ?').all(symbol, from, to, limit);
+  const rows = d.prepare('SELECT symbol, source, price, ts FROM prices WHERE symbol = ? AND ts BETWEEN ? AND ? ORDER BY ts ASC LIMIT ?').all(symbol, from, to, limit);
   return rows || [];
 }
 
@@ -32,6 +32,6 @@ export function getPriceCount(symbol) {
 
 export function getAllTimeHigh(symbol) {
   const d = getDb();
-  const row = d.prepare('SELECT price, ts, source FROM prices WHERE symbol = ? ORDER BY price DESC LIMIT 1').get(symbol);
+  const row = d.prepare('SELECT symbol, source, price, ts FROM prices WHERE symbol = ? ORDER BY price DESC LIMIT 1').get(symbol);
   return row || null;
 }
