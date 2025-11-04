@@ -17,6 +17,8 @@ import treasuryRoutes from "./app/routes/treasuryRoutes.js";
 import metricsRoutes from "./app/routes/metricsRoutes.js";
 import lightningRoutes from "./app/routes/lightningRoutes.js";
 import proxyRoutes from "./app/routes/proxyRoutes.js";
+import miningRoutes from "./app/routes/miningRoutes.js";
+import mempoolRoutes from "./app/routes/mempoolRoutes.js";
 
 // Background services
 import { startBlockPolling } from "./app/services/blockPoller.js";
@@ -60,6 +62,8 @@ app.get("/api", (req, res) => {
       metrics: "/api/metrics",
       blocks: "/api/blocks",
       lightning: "/api/lightning",
+      mining: "/api/mining",
+      mempool: "/api/mempool",
     },
   });
 });
@@ -78,6 +82,8 @@ app.use("/api/blocks", blockRoutes);
 app.use("/api/treasuries", treasuryRoutes);
 app.use("/api/metrics", metricsRoutes);
 app.use("/api/lightning", lightningRoutes);
+app.use("/api/mining", miningRoutes);
+app.use("/api/mempool", mempoolRoutes);
 app.use("/api", proxyRoutes);
 
 // Simple proxy endpoints to avoid frontend CORS for external data

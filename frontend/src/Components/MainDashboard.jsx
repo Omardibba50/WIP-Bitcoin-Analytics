@@ -11,6 +11,8 @@ import 'chartjs-adapter-date-fns';
 import BlockchainBlocks from './BlockchainBlocks';
 import CorporateTreasuries from './CorporateTreasuries';
 import BitcoinMetrics from './BitcoinMetrics';
+import MiningEconomics from './MiningEconomics';
+import PredictedNextBlock from './PredictedNextBlock';
 import PriceCards from './PriceCards';
 import PriceChart from './PriceChart';
 import ModelChart from './ModelChart';
@@ -749,6 +751,8 @@ function MainDashboard() {
                         {/* Combined Metrics and Holdings Sections */}
                         <h2 style={{ color: '#00b3ff', marginTop: '2.5rem', marginBottom: '1rem', fontSize: '1.3rem' }}>Network and Corporate Data</h2>
                         <BitcoinMetrics symbol={searchTerm} />
+                        <MiningEconomics />
+                        <PredictedNextBlock />
                         <BlockchainBlocks />
                         <CorporateTreasuries />
                     </>
