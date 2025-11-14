@@ -70,7 +70,7 @@ function BlockchainBlocks() {
       data: blocks.map(b => b.tx_count),
       fill: false,
       borderColor: '#4ade80',
-      backgroundColor: 'rgba(74, 222, 128, 0.1)',
+      backgroundColor: '#ffffff',
       tension: 0.4,
       pointRadius: 4,
       pointHoverRadius: 6,
@@ -83,16 +83,16 @@ function BlockchainBlocks() {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        labels: { color: '#ccc' }
+        labels: { color: '#fff' }
       }
     },
     scales: {
       x: {
-        ticks: { color: '#888' },
+        ticks: { color: '#000' },
         grid: { color: '#333' }
       },
       y: {
-        ticks: { color: '#888' },
+        ticks: { color: '#000' },
         grid: { color: '#333' }
       }
     }
@@ -102,7 +102,7 @@ function BlockchainBlocks() {
     return (
       <div style={{ marginBottom: '2rem' }}>
         <h2 style={{ 
-          color: '#00b3ff', 
+          color: '#000000', 
           margin: '0 0 1rem 0',
           fontSize: '1.5rem',
           fontWeight: 'bold'
@@ -141,7 +141,7 @@ function BlockchainBlocks() {
         marginBottom: '1rem'
       }}>
         <h2 style={{ 
-          color: '#00b3ff', 
+          color: '#ffffff', 
           margin: 0,
           fontSize: '1.5rem',
           fontWeight: 'bold'
@@ -150,7 +150,7 @@ function BlockchainBlocks() {
         </h2>
         <div style={{ 
           fontSize: '0.9rem', 
-          color: '#888',
+          color: '#000',
           display: 'flex',
           alignItems: 'center',
           gap: '0.5rem'
@@ -174,15 +174,15 @@ function BlockchainBlocks() {
       }}>
         {/* Block Size Chart */}
         <div style={{
-          backgroundColor: '#1a1a1a',
+          backgroundColor: '#ffffff',
           padding: '1.5rem',
           borderRadius: '8px',
-          border: '1px solid #333'
+          border: '1px solid #ccc'
         }}>
           <h3 style={{ 
             margin: '0 0 1rem 0', 
             fontSize: '1rem',
-            color: '#ccc'
+            color: '#ffffff'
           }}>
             Block Sizes
           </h3>
@@ -193,15 +193,15 @@ function BlockchainBlocks() {
 
         {/* Transaction Count Chart */}
         <div style={{
-          backgroundColor: '#1a1a1a',
+          backgroundColor: '#ffffff',
           padding: '1.5rem',
           borderRadius: '8px',
-          border: '1px solid #333'
+          border: '1px solid #ccc'
         }}>
           <h3 style={{ 
             margin: '0 0 1rem 0', 
             fontSize: '1rem',
-            color: '#ccc'
+            color: '#ffffff'
           }}>
             Transaction Counts
           </h3>
@@ -213,9 +213,9 @@ function BlockchainBlocks() {
 
       {/* Blocks List */}
       <div style={{
-        backgroundColor: '#1a1a1a',
+        backgroundColor: '#ffffff',
         borderRadius: '8px',
-        border: '1px solid #333',
+        border: '1px solid #ccc',
         overflow: 'hidden'
       }}>
         <div style={{
@@ -223,10 +223,10 @@ function BlockchainBlocks() {
           gridTemplateColumns: '100px 1fr 120px 100px 100px 150px',
           gap: '1rem',
           padding: '1rem 1.5rem',
-          backgroundColor: '#252525',
+          backgroundColor: '#ffffff',
           fontWeight: 'bold',
           fontSize: '0.85rem',
-          color: '#888',
+          color: '#000',
           borderBottom: '1px solid #333'
         }}>
           <div>HEIGHT</div>
@@ -245,12 +245,12 @@ function BlockchainBlocks() {
               gridTemplateColumns: '100px 1fr 120px 100px 100px 150px',
               gap: '1rem',
               padding: '1rem 1.5rem',
-              borderBottom: idx < blocks.length - 1 ? '1px solid #333' : 'none',
+              borderBottom: idx < blocks.length - 1 ? '1px solid #ccc' : 'none',
               transition: 'all 0.2s',
               cursor: 'pointer'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#252525';
+              e.currentTarget.style.backgroundColor = '#ffffff';
               e.currentTarget.style.transform = 'translateX(4px)';
             }}
             onMouseLeave={(e) => {
@@ -260,14 +260,15 @@ function BlockchainBlocks() {
             onClick={() => setSelectedBlock(block)}
           >
             <div style={{ 
-              color: '#00b3ff', 
+              color: '#000', 
               fontWeight: 'bold',
               fontFamily: 'monospace'
             }}>
               {block.height}
             </div>
             <div style={{ 
-              color: '#ccc',
+              color: '#000',
+              backgroundColor: '#ffffff',
               fontFamily: 'monospace',
               fontSize: '0.85rem',
               overflow: 'hidden',
@@ -276,20 +277,20 @@ function BlockchainBlocks() {
             }}>
               {block.hash}
             </div>
-            <div style={{ color: '#888', fontSize: '0.9rem' }}>
+            <div style={{ color: '#000',backgroundColor: '#ffffff', fontSize: '0.9rem' }}>
               {timeAgo(block.timestamp)}
             </div>
-            <div style={{ color: '#ccc' }}>
+            <div style={{ color: '#000',backgroundColor: '#ffffff' }}>
               {formatSize(block.size)}
             </div>
             <div style={{ 
-              color: '#4ade80',
+              color: '#000',backgroundColor: '#ffffff',
               fontWeight: 'bold'
             }}>
               {block.tx_count}
             </div>
             <div style={{ 
-              color: '#888',
+              color: '#000',backgroundColor: '#ffffff',
               fontSize: '0.85rem',
               overflow: 'hidden',
               textOverflow: 'ellipsis',

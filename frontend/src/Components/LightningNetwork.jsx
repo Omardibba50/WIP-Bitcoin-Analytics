@@ -5,7 +5,7 @@ function LightningNetwork({ lightningStats, loading }) {
   if (loading) {
     return (
       <div style={{
-        background: 'rgba(30, 30, 40, 0.6)',
+        background: '#ffffff',
         backdropFilter: 'blur(10px)',
         border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '12px',
@@ -15,12 +15,12 @@ function LightningNetwork({ lightningStats, loading }) {
         <h3 style={{
           fontSize: '1.25rem',
           fontWeight: '600',
-          color: '#ffffff',
+          color: '#000000',
           marginBottom: '1rem'
         }}>
           ⚡ Lightning Network
         </h3>
-        <p style={{ color: '#888' }}>Loading Lightning Network data...</p>
+        <p style={{ color: '#000000' }}>Loading Lightning Network data...</p>
       </div>
     );
   }
@@ -35,28 +35,28 @@ function LightningNetwork({ lightningStats, loading }) {
       value: `${formatNumber(lightningStats.totalCapacity, 2)} BTC`,
       subValue: lightningStats.totalCapacityUSD ? formatCurrency(lightningStats.totalCapacityUSD, { maximumFractionDigits: 0 }) : null,
       icon: '💰',
-      color: '#00b3ff'
+      color: '#000000'
     },
     {
       label: 'Total Nodes',
       value: lightningStats.totalNodes.toLocaleString(),
       subValue: `${lightningStats.torNodes.toLocaleString()} Tor nodes`,
       icon: '🌐',
-      color: '#4ade80'
+      color: '#000000'
     },
     {
       label: 'Total Channels',
       value: lightningStats.totalChannels.toLocaleString(),
       subValue: `Avg: ${formatNumber(lightningStats.avgChannelSize, 4)} BTC`,
       icon: '🔗',
-      color: '#f59e0b'
+      color: '#000000'
     },
     {
       label: 'Tor Capacity',
       value: `${formatNumber(lightningStats.torCapacity, 2)} BTC`,
       subValue: `${lightningStats.torCapacityPercentage.toFixed(1)}% of total`,
       icon: '🧅',
-      color: '#a78bfa'
+      color: '#000000'
     }
   ];
 
@@ -78,14 +78,14 @@ function LightningNetwork({ lightningStats, loading }) {
         <h3 style={{
           fontSize: '1.25rem',
           fontWeight: '600',
-          color: '#ffffff',
+          color: '#000000',
           margin: 0
         }}>
           ⚡ Lightning Network Statistics
         </h3>
         <span style={{
           fontSize: '0.75rem',
-          color: '#888',
+          color: '#000000',
           fontStyle: 'italic'
         }}>
           Real-time data

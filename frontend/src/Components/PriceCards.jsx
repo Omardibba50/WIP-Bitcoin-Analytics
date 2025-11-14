@@ -77,9 +77,9 @@ function PriceCards({ priceSummary, allTimeHigh, predictions, models }) {
         <div
           key={idx}
           style={{
-            background: 'rgba(30, 30, 40, 0.6)',
+            background: '#ffffff',
             backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            border: '2px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '12px',
             padding: '1.5rem',
             transition: 'all 0.3s ease',
@@ -97,7 +97,7 @@ function PriceCards({ priceSummary, allTimeHigh, predictions, models }) {
           <div style={{
             fontSize: '0.75rem',
             fontWeight: '600',
-            color: 'rgba(255, 255, 255, 0.6)',
+            color: '#000000',
             marginBottom: '0.75rem',
             letterSpacing: '0.5px'
           }}>
@@ -106,11 +106,8 @@ function PriceCards({ priceSummary, allTimeHigh, predictions, models }) {
           <div style={{
             fontSize: '1.5rem',
             fontWeight: '700',
-            color: tile.type === 'negative' ? '#ff6b6b' :
-                   tile.type === 'positive' ? '#4ade80' :
-                   tile.type === 'accent' ? '#00b3ff' :
-                   tile.type === 'info' ? '#a78bfa' :
-                   '#ffffff'
+            color: tile.type === 'negative' ? '#ff6b6b' : 
+                              tile.type === 'positive' ? '#4ade80' :'#000000'
           }}>
             {tile.value}
           </div>
