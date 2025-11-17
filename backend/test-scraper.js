@@ -66,6 +66,23 @@ async function testScraperAPI() {
     }
     
     console.log('\n---\n');
+
+     // Test 3: nodes with https://bitnodes.io/
+    console.log('Test 3: Nodes connectivity');
+    const testUrl3 = `https://api.scraperapi.com/?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent('https://bitnodes.io/')}`;
+    const responsen = await fetch(testUrl3);
+    
+    if (responsen.ok) {
+      const data3 = await responsen.json();
+      console.log('✅ ScraperAPI is working!');
+      console.log(' Nodes Response:', data3);
+    } else {
+      console.log('❌ ScraperAPI test failed:', responsen.status);
+    }
+    
+    console.log('\n---\n');
+
+
     console.log('✅ All tests completed!');
     console.log('\nNext steps:');
     console.log('1. Make sure SCRAPER_API_KEY is in your .env file');

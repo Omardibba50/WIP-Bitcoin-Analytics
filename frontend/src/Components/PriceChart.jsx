@@ -17,7 +17,7 @@ function PriceChart({ priceHistory, loading, onTimeRangeChange }) {
   if (loading) {
     return (
       <div style={{
-        background: 'rgba(30, 30, 40, 0.6)',
+        background: '#ffffff',
         backdropFilter: 'blur(10px)',
         border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '12px',
@@ -27,7 +27,7 @@ function PriceChart({ priceHistory, loading, onTimeRangeChange }) {
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-        <div style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Loading chart...</div>
+        <div style={{ color: '#000000' }}>Loading chart...</div>
       </div>
     );
   }
@@ -42,9 +42,9 @@ function PriceChart({ priceHistory, loading, onTimeRangeChange }) {
 
   return (
     <div style={{
-      background: 'rgba(30, 30, 40, 0.6)',
+      background: '#ffffff',
       backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
+      border: '1px solid #ffffff',
       borderRadius: '12px',
       padding: '1.5rem',
       marginBottom: '2rem'
@@ -58,7 +58,7 @@ function PriceChart({ priceHistory, loading, onTimeRangeChange }) {
         <h3 style={{
           fontSize: '1.25rem',
           fontWeight: '600',
-          color: '#ffffff',
+          color: '#000000',
           margin: 0
         }}>
           Price History

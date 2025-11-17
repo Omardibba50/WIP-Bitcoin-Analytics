@@ -2,12 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Chart as ChartComponent, Line, Bar } from 'react-chartjs-2';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-
 import { Chart as ChartJS, LineElement, BarElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend, ArcElement, TimeScale } from 'chart.js';
 import { CandlestickController, CandlestickElement } from 'chartjs-chart-financial';
 import 'chartjs-adapter-date-fns';
-
-// Import Child Components
 import BlockchainBlocks from './BlockchainBlocks';
 import CorporateTreasuries from './CorporateTreasuries';
 import BitcoinMetrics from './BitcoinMetrics';
@@ -16,22 +13,22 @@ import PredictedNextBlock from './PredictedNextBlock';
 import PriceCards from './PriceCards';
 import PriceChart from './PriceChart';
 import ModelChart from './ModelChart';
-
-// Import centralized API service
+import MiningEconomics from './MiningEconomics';
+import PredictedNextBlock from './PredictedNextBlock';
+import LiveModelsChart from "./LiveModelsChart";
+import PricePerformanceChart from "./PricePerformanceChart";
 import { priceApi, modelApi, predictionApi } from '../services/api';
 
-// Register all necessary chart elements
 ChartJS.register(
     LineElement, BarElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend, ArcElement, TimeScale,
     CandlestickController, CandlestickElement
 );
 
-// Helper function to format date into timestamp (milliseconds)
 const dateToTimestamp = (date) => (date ? date.getTime() : null);
 
 // API Base URL
 // Use centralized API base via services/api.js; remove hardcoded base URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
 
 // Keep legacy API service for compatibility with existing code
 const apiService = {
@@ -116,7 +113,7 @@ const customStyles = `
     margin: 0 auto;
 }
 .section-card {
-    background-color: #1a1a1a;
+    background-color: #ffffff;
     padding: 1rem;
     border-radius: 8px;
     border: 1px solid #333;
@@ -257,8 +254,32 @@ const customStyles = `
     .tiles-grid {
         grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     }
+
+    /* ===== FOOTER STYLES ===== */
+.dashboard-footer {
+  background-color: #1a1a1a;
+  color: white;
+  text-align: center;
+  padding: 1rem;
+  margin-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 0.95rem;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
 }
+
+.dashboard-footer a {
+  color: white;
+  text-decoration: underline;
+}
+
+.dashboard-footer a:hover {
+  text-decoration: none;
+  opacity: 0.9;
+}
+}
+
 `;
+
 
 
 // --- Main Dashboard Component ---
@@ -305,29 +326,99 @@ function MainDashboard() {
             const historyData = await apiService.getPriceHistory(tempSearchTerm, fromTimestamp, toTimestamp, 500);
             const history = historyData.data || [];
             
-            // BTC vs Gold Comparison - fetch gold data via free API (Stooq XAUUSD)
+               //  BTC vs Gold Comparison — fully aligned (historical + live + forward-filled)
             const labels = history.map(d => d.ts || d.timestamp);
             const bitcoin = history.map(d => d.price);
-            try {
-                // Fetch gold prices via backend proxy to avoid CORS
-                const res = await fetch(`${API_BASE_URL}/proxy/gold-xauusd`);
-                if (res.ok) {
-                    const json = await res.json();
-                    const records = json.data || [];
-                    const goldMap = new Map(records.map(r => [new Date(new Date(r.timestamp).toDateString()).getTime(), r.price]));
-                    const gold = labels.map(ts => goldMap.get(new Date(new Date(ts).toDateString()).getTime()) || null);
-                    const paired = labels.map((ts, i) => {
-                        const g = gold[i];
-                        const b = bitcoin[i];
-                        if (g && b) return b / g; return null;
-                    });
-                    setBtcVsGold({ labels, bitcoin, gold: gold.filter(v => v !== null), btcPricedInGold: paired.filter(v => v !== null) });
-                } else {
-                    setBtcVsGold({ labels, bitcoin, gold: [], btcPricedInGold: [] });
+           
+                try {
+                //  Prepare BTC labels & prices
+                const labelsFromBTC = history.map(d =>
+                    new Date(d.ts || d.timestamp).toISOString().split("T")[0]
+                );
+                const bitcoinRaw = history.map(d => d.price);
+
+                //  Fetch 90-day historical gold data
+                const histRes = await fetch(`${API_BASE_URL}/proxy/gold-xauusd`);
+                const histJson = await histRes.json();
+                let records = histJson.data || [];
+
+                // Fetch latest live gold price
+                const liveRes = await fetch(`${API_BASE_URL}/proxy/gold-live`);
+                if (liveRes.ok) {
+                    const liveJson = await liveRes.json();
+                    const live = liveJson.data?.[0];
+                    if (live && !records.find(r => r.timestamp === live.timestamp)) {
+                    records.push(live); // add today's live price if missing
+                    }
                 }
-            } catch (_) {
-                setBtcVsGold({ labels, bitcoin, gold: [], btcPricedInGold: [] });
+
+                // 4Merge all unique dates from BTC + Gold
+                const labelsFromGold = records.map(r => r.timestamp);
+                const allDates = Array.from(new Set([...labelsFromBTC, ...labelsFromGold])).sort(
+                    (a, b) => new Date(a) - new Date(b)
+                );
+
+                // 5Forward-fill BTC prices
+                let lastBTC = bitcoinRaw[0];
+                const bitcoinFilled = allDates.map(ts => {
+                    const match = history.find(
+                    d => new Date(d.ts || d.timestamp).toISOString().split("T")[0] === ts
+                    );
+                    if (match && match.price) lastBTC = match.price;
+                    return lastBTC;
+                });
+
+                //  Forward-fill Gold prices
+                const goldMap = new Map(records.map(r => [r.timestamp, r.price]));
+                let lastGold = records[0]?.price || null;
+                const goldFilled = allDates.map(ts => {
+                    const g = goldMap.get(ts);
+                    if (g != null) lastGold = g;
+                    return lastGold;
+                });
+
+                // 7Compute BTC priced in Gold
+                const btcPricedInGold = allDates.map((ts, i) => {
+                    const b = bitcoinFilled[i];
+                    const g = goldFilled[i];
+                    return b && g ? b / g : null;
+                });
+
+                
+                //  Limit chart view to the most recent 30 days
+                    const DAYS_TO_SHOW = 30;
+                    const total = allDates.length;
+                    const startIndex = Math.max(total - DAYS_TO_SHOW, 0);
+
+                    const recentLabels = allDates.slice(startIndex);
+                    const recentBTC = bitcoinFilled.slice(startIndex);
+                    const recentGold = goldFilled.slice(startIndex);
+                    const recentBTCinGold = btcPricedInGold.slice(startIndex);
+
+                    setBtcVsGold({
+                    labels: recentLabels,
+                    bitcoin: recentBTC,
+                    gold: recentGold,
+                    btcPricedInGold: recentBTCinGold,
+                    });
+
+                    console.log(
+                    ` Showing last ${DAYS_TO_SHOW} days on chart (${recentLabels[0]} → ${recentLabels[recentLabels.length - 1]})`
+                    );
+
+
+                console.log(
+                    " BTC vs Gold aligned dataset:",
+                    allDates.length,
+                    "points",
+                    `(${allDates[0]} → ${allDates[allDates.length - 1]})`
+                );
+            } catch (err) 
+            {
+                console.error("BTC vs Gold fetch error:", err);
+                setBtcVsGold({ labels: [], bitcoin: [], gold: [], btcPricedInGold: [] });
             }
+
 
 
             // Fetch Candlestick/OHLC Data from CoinDesk API
@@ -431,7 +522,7 @@ function MainDashboard() {
                     data,
                     type: 'candlestick',
                     borderColor: "#00b3ff",
-                    color: { up: "#4ade80", down: "#ff6b6b" },
+                    color: { up: "#08f05dff", down: "#f50808ff" },
                 },
             ],
         },
@@ -497,7 +588,7 @@ function MainDashboard() {
         // Error display
         return (
             <div className="dashboard-bg" style={{ padding: '2rem', textAlign: 'center' }}>
-                <h2 style={{ color: '#ff6b6b' }}>Error Loading Dashboard 🛑</h2>
+                <h2 style={{ color: '#ff6b6b' }}>Error Loading Dashboard </h2>
                 <p>{error}</p>
                 <p style={{ color: '#888', marginTop: '1rem' }}>Make sure your backend server is running at <strong>{API_BASE_URL}</strong></p>
                 <button onClick={() => window.location.reload()} style={{ padding: '0.5rem 1rem', backgroundColor: '#00b3ff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '1rem' }}>Retry</button>
@@ -512,7 +603,7 @@ function MainDashboard() {
             {/* Header: Sticky navigation */}
             <header className="main-header">
                 <nav className="main-nav">
-                    <div className="logo-section" style={{ fontSize: '1.3rem', fontWeight: '700', color: '#00b3ff' }}> {searchTerm} Analytics </div>
+                    <div className="logo-section" style={{ fontSize: '1.3rem', fontWeight: '700', color: '#ffffff' }}> {searchTerm} Analytics </div>
 
                     {/* Menu Layout */}
                     <ul style={{ display: 'flex', gap: '1.5rem', listStyle: 'none', margin: 0, padding: 0 }}>
@@ -521,7 +612,7 @@ function MainDashboard() {
                                 <button onClick={() => setActiveTab(tab)} style={{
                                     background: 'none',
                                     border: 'none',
-                                    color: activeTab === tab ? '#00b3ff' : '#ccc',
+                                    color: activeTab === tab ? '#eff2f3ff' : '#ccc',
                                     cursor: 'pointer',
                                     padding: '0.5rem 0',
                                     fontSize: '0.95rem',
@@ -587,7 +678,7 @@ function MainDashboard() {
 
                             {/* Apply Button - Fixed width/height via CSS class .apply-button */}
                             <button type="submit" className="apply-button" style={{
-                                backgroundColor: '#00b3ff',
+                                backgroundColor: '#1fc7d3ff',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '4px',
@@ -607,7 +698,7 @@ function MainDashboard() {
                         
                         {/* Main Price Chart (Candlestick) */}
                         <section className="section-card" style={{ marginBottom: '1.5rem' }}>
-                            <h2 style={{ margin: '0 0 0.75rem 0', fontSize: '1.1rem' }}> {searchTerm} Price History (Candlestick) 📈</h2>
+                            <h2 style={{ margin: '0 0 0.75rem 0', fontSize: '1.1rem' }}> {searchTerm} Price History (Candlestick) </h2>
                             <div className="chart-container-lg">
                                 {mainChartOHLCData && mainChartOHLCData.length > 0 ? (
                                     <ChartComponent
@@ -616,7 +707,7 @@ function MainDashboard() {
                                         options={getCandlestickConfig(mainChartOHLCData, `${searchTerm} Candlestick`).options}
                                     />
                                 ) : (
-                                    <div style={{ color: '#888', textAlign: 'center', padding: '1rem' }}>No candlestick data available.</div>
+                                    <div style={{ color: '#0000', textAlign: 'center', padding: '1rem' }}>No candlestick data available.</div>
                                 )}
                             </div>
                         </section>
@@ -626,9 +717,8 @@ function MainDashboard() {
                             {/* 1. Models Chart (Left Subgraph) */}
                             <section className="section-card">
                                 <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem' }}>Available Prediction Models </h3>
-                                <div className="chart-container-sm">
-                                    <Bar data={{ labels: models.map(m => m.name || m.id), datasets: [{ label: 'Model Count', data: models.map(() => 1), backgroundColor: models.map((_, idx) => `rgba(${38 + idx * 60}, ${38 + idx * 60}, ${38 + idx * 80}, 0.85)`), borderRadius: 8 }] }}
-                                        options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#888' }, grid: { color: '#333' } }, y: { ticks: { color: '#888' }, grid: { color: '#333' } } } }} />
+                               <div className="chart-container-sm">
+                                       <LiveModelsChart />
                                 </div>
                             </section>
 
@@ -639,7 +729,7 @@ function MainDashboard() {
                                     {(btcVsGold.bitcoin?.length || 0) > 0 ? (
                                         <Line data={getComparisonChartConfig().data} options={getComparisonChartConfig().options} />
                                     ) : (
-                                        <div style={{ color: '#888', textAlign: 'center', padding: '1rem' }}>No comparison data available.</div>
+                                        <div style={{ color: '#0000', textAlign: 'center', padding: '1rem' }}>No comparison data available.</div>
                                     )}
                                 </div>
                             </section>
@@ -651,7 +741,7 @@ function MainDashboard() {
                             <section className="section-card">
                                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem' }}>
                                     <h3 style={{ margin: 0, fontSize: '1rem', letterSpacing: '0.3px' }}>Lightning Network</h3>
-                                    <span style={{ color: '#888', fontSize: '0.8rem' }}>Snapshot</span>
+                                    <span style={{ color: '#000', fontSize: '0.8rem' }}>Snapshot</span>
                                 </div>
                                 <div style={{ borderTop: '1px solid #333', margin: '0.25rem 0 0.75rem 0' }} />
                                 {lightningStats ? (
@@ -661,48 +751,48 @@ function MainDashboard() {
                                         gap: '0.75rem'
                                     }}>
                                         <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Total Capacity</div>
-                                            <div style={{ color: '#ffd27a', fontWeight: 700 }}>{(lightningStats.totalCapacity ?? 0).toFixed(2)} BTC</div>
+                                            <div style={{ color: '#000', fontSize: '0.8rem' }}>Total Capacity</div>
+                                            <div style={{ color: '#000', fontWeight: 700 }}>{(lightningStats.totalCapacity ?? 0).toFixed(2)} BTC</div>
                                         </div>
                                         <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Total Capacity (USD)</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(lightningStats.totalCapacityUSD ?? 0)}</div>
+                                            <div style={{ color: '#000', fontSize: '0.8rem' }}>Total Capacity (USD)</div>
+                                            <div style={{ color: '#000', fontWeight: 700 }}>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(lightningStats.totalCapacityUSD ?? 0)}</div>
                                         </div>
                                         <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Total Nodes</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.totalNodes ?? 0).toLocaleString()}</div>
+                                            <div style={{ color: '#000', fontSize: '0.8rem' }}>Total Nodes</div>
+                                            <div style={{ color: '#000', fontWeight: 700 }}>{(lightningStats.totalNodes ?? 0).toLocaleString()}</div>
                                         </div>
                                         <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Total Channels</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.totalChannels ?? 0).toLocaleString()}</div>
+                                            <div style={{ color: '#000', fontSize: '0.8rem' }}>Total Channels</div>
+                                            <div style={{ color: '#000', fontWeight: 700 }}>{(lightningStats.totalChannels ?? 0).toLocaleString()}</div>
                                         </div>
                                         <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Tor Capacity</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.torCapacity ?? 0).toFixed(2)} BTC</div>
+                                            <div style={{ color: '#000', fontSize: '0.8rem' }}>Tor Capacity</div>
+                                            <div style={{ color: '#000', fontWeight: 700 }}>{(lightningStats.torCapacity ?? 0).toFixed(2)} BTC</div>
                                         </div>
                                         <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Tor Nodes</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.torNodes ?? 0).toLocaleString()}</div>
+                                            <div style={{ color: '#000', fontSize: '0.8rem' }}>Tor Nodes</div>
+                                            <div style={{ color: '#000', fontWeight: 700 }}>{(lightningStats.torNodes ?? 0).toLocaleString()}</div>
                                         </div>
                                         <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Clearnet Nodes</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.clearnetNodes ?? 0).toLocaleString()}</div>
+                                            <div style={{ color: '#000', fontSize: '0.8rem' }}>Clearnet Nodes</div>
+                                            <div style={{ color: '#000', fontWeight: 700 }}>{(lightningStats.clearnetNodes ?? 0).toLocaleString()}</div>
                                         </div>
                                         <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Unannounced Nodes</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.unannouncedNodes ?? 0).toLocaleString()}</div>
+                                            <div style={{ color: '#000', fontSize: '0.8rem' }}>Unannounced Nodes</div>
+                                            <div style={{ color: '#000', fontWeight: 700 }}>{(lightningStats.unannouncedNodes ?? 0).toLocaleString()}</div>
                                         </div>
                                         <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Avg Capacity</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.avgCapacity ?? 0).toFixed(4)} BTC</div>
+                                            <div style={{ color: '#000', fontSize: '0.8rem' }}>Avg Capacity</div>
+                                            <div style={{ color: '#000', fontWeight: 700 }}>{(lightningStats.avgCapacity ?? 0).toFixed(4)} BTC</div>
                                         </div>
                                         <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Median Capacity</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.medianCapacity ?? 0).toFixed(4)} BTC</div>
+                                            <div style={{ color: '#000', fontSize: '0.8rem' }}>Median Capacity</div>
+                                            <div style={{ color: '#000', fontWeight: 700 }}>{(lightningStats.medianCapacity ?? 0).toFixed(4)} BTC</div>
                                         </div>
                                         <div>
-                                            <div style={{ color: '#888', fontSize: '0.8rem' }}>Tor Capacity %</div>
-                                            <div style={{ color: '#ccc', fontWeight: 700 }}>{(lightningStats.torCapacityPercentage ?? 0).toFixed(1)}%</div>
+                                            <div style={{ color: '#000', fontSize: '0.8rem' }}>Tor Capacity %</div>
+                                            <div style={{ color: '#000', fontWeight: 700 }}>{(lightningStats.torCapacityPercentage ?? 0).toFixed(1)}%</div>
                                         </div>
                                     </div>
                                 ) : (
@@ -725,6 +815,17 @@ function MainDashboard() {
                                 </div>
                             </section>
                         </div>
+                        <div className="tiles-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+                            {/* 5. PricePerformanceChart */}
+                            <section className="section-card">
+                               <h3 style={{ margin: "0 0 0.75rem 0", fontSize: "1rem" }}>Price Performance</h3>
+                               <div className="chart-container-sm">
+                                  <PricePerformanceChart API_BASE_URL={API_BASE_URL} />
+                               </div>
+                      
+                            </section>
+                        </div>
+                         
 
                         {/* Predictions Section - Improved mobile scroll */}
                         {predictions.length > 0 && (
@@ -734,13 +835,13 @@ function MainDashboard() {
                                     <div className="predictions-scroll-container">
                                         {predictions.slice(0, 5).map((prediction) => (
                                             <div key={prediction.id || `${prediction.horizon}-${prediction.timestamp || ''}`} className="prediction-card">
-                                                <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#00b3ff', marginBottom: '0.25rem' }}>
+                                                <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '0.25rem' }}>
                                                     {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(prediction.predicted_price)}
                                                 </div>
-                                                <div style={{ fontSize: '0.8rem', color: '#4ade80', marginBottom: '0.5rem' }}>
+                                                <div style={{ fontSize: '0.8rem', color: '#ffffffff', marginBottom: '0.5rem' }}>
                                                     Confidence: <strong>{prediction.confidence != null ? (prediction.confidence * 100).toFixed(1) : '—'}%</strong>
                                                 </div>
-                                                <div style={{ fontSize: '0.75rem', color: '#888' }}> Horizon: {prediction.horizon} </div>
+                                                <div style={{ fontSize: '0.75rem', color: '#0000' }}> Horizon: {prediction.horizon} </div>
                                             </div>
                                         ))}
                                     </div>
@@ -749,7 +850,7 @@ function MainDashboard() {
                         )}
 
                         {/* Combined Metrics and Holdings Sections */}
-                        <h2 style={{ color: '#00b3ff', marginTop: '2.5rem', marginBottom: '1rem', fontSize: '1.3rem' }}>Network and Corporate Data</h2>
+                        <h2 style={{ color: '#ffffff', marginTop: '2.5rem', marginBottom: '1rem', fontSize: '1.3rem' }}>Network and Corporate Data</h2>
                         <BitcoinMetrics symbol={searchTerm} />
                         <MiningEconomics />
                         <PredictedNextBlock />
@@ -764,6 +865,28 @@ function MainDashboard() {
                 {activeTab === 'holdings' && <CorporateTreasuries />}
 
             </main>
+            {/* FOOTER SECTION */}
+      <footer className="dashboard-footer">
+        <p>© {new Date().getFullYear()} BTC predict | All Rights Reserved</p>
+        <p>
+          Developed by <strong>Pavan Mamidi</strong> •{' '}
+          <a
+            href="mailto:decentralized.dev@gmail.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            decentralized.dev@gmail.com
+          </a>{' '}
+          |{' '}
+          <a
+            href="https://github.com/decentralized-dev"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            GitHub
+          </a>
+        </p>
+      </footer>
         </div>
     );
 }

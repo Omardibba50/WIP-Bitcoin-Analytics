@@ -32,7 +32,7 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        backgroundColor: '#ffffff',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -43,9 +43,9 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
     >
       <div 
         style={{
-          backgroundColor: '#1a1a1a',
+          backgroundColor: '#ffffff',
           borderRadius: '12px',
-          border: '1px solid #333',
+          border: '1px solid #fff',
           maxWidth: '700px',
           width: '100%',
           maxHeight: '85vh',
@@ -61,12 +61,12 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
           alignItems: 'flex-start',
           marginBottom: '1.5rem',
           paddingBottom: '1rem',
-          borderBottom: '1px solid #333'
+          borderBottom: '1px solid #fff'
         }}>
           <div>
             <h2 style={{ 
               margin: '0 0 0.5rem 0', 
-              color: '#00b3ff',
+              color: '#000000',
               fontSize: '1.8rem'
             }}>
               {company.company_name}
@@ -75,10 +75,10 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
               display: 'flex', 
               alignItems: 'center', 
               gap: '0.5rem',
-              color: '#888',
+              color: '#000000ff',
               fontSize: '0.9rem'
             }}>
-              <span>🌍 {company.country}</span>
+              <span> {company.country}</span>
               <span>•</span>
               <span>Updated: {formatDate(company.last_updated)}</span>
             </div>
@@ -88,7 +88,7 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
             style={{
               background: 'none',
               border: 'none',
-              color: '#888',
+              color: '#000',
               fontSize: '1.5rem',
               cursor: 'pointer',
               padding: '0.5rem'
@@ -106,14 +106,14 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
           marginBottom: '1.5rem'
         }}>
           <div style={{
-            backgroundColor: '#0f0f0f',
+            backgroundColor: '#ffffff',
             padding: '1.5rem',
             borderRadius: '8px',
-            border: '1px solid #333'
+            border: '1px solid #fff'
           }}>
             <div style={{ 
               fontSize: '0.75rem', 
-              color: '#888', 
+              color: '#000', 
               marginBottom: '0.5rem',
               textTransform: 'uppercase',
               fontWeight: '600'
@@ -123,14 +123,14 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
             <div style={{ 
               fontSize: '2rem', 
               fontWeight: 'bold',
-              color: '#4ade80',
+              color: '#000',
               marginBottom: '0.25rem'
             }}>
               {company.btc_holdings.toLocaleString()} BTC
             </div>
             <div style={{ 
               fontSize: '0.85rem', 
-              color: '#888'
+              color: '#000'
             }}>
               {company.percentage_of_supply?.toFixed(4)}% of total supply
             </div>
@@ -144,7 +144,7 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
           }}>
             <div style={{ 
               fontSize: '0.75rem', 
-              color: '#888', 
+              color: '#000', 
               marginBottom: '0.5rem',
               textTransform: 'uppercase',
               fontWeight: '600'
@@ -154,14 +154,14 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
             <div style={{ 
               fontSize: '2rem', 
               fontWeight: 'bold',
-              color: '#fbbf24',
+              color: '#000',
               marginBottom: '0.25rem'
             }}>
               ${formatNumber(currentValue)}
             </div>
             <div style={{ 
               fontSize: '0.85rem', 
-              color: '#888'
+              color: '#000'
             }}>
               At ${(btcPrice || 67000).toLocaleString()}/BTC
             </div>
@@ -170,7 +170,7 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
 
         {/* Financial Metrics */}
         <div style={{
-          backgroundColor: '#0f0f0f',
+          backgroundColor: '#ffffff',
           padding: '1.5rem',
           borderRadius: '8px',
           border: '1px solid #333',
@@ -178,7 +178,7 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
         }}>
           <div style={{ 
             fontSize: '0.75rem', 
-            color: '#888', 
+            color: '#000', 
             marginBottom: '1rem',
             textTransform: 'uppercase',
             fontWeight: '600'
@@ -197,7 +197,7 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
               paddingBottom: '0.75rem',
               borderBottom: '1px solid #333'
             }}>
-              <span style={{ color: '#888' }}>Average Cost Basis:</span>
+              <span style={{ color: '#000' }}>Average Cost Basis:</span>
               <span style={{ color: '#ccc', fontWeight: '600' }}>
                 ${avgCostBasis.toLocaleString(undefined, {maximumFractionDigits: 0})} per BTC
               </span>
@@ -208,7 +208,7 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
               paddingBottom: '0.75rem',
               borderBottom: '1px solid #333'
             }}>
-              <span style={{ color: '#888' }}>Book Value:</span>
+              <span style={{ color: '#000' }}>Book Value:</span>
               <span style={{ color: '#ccc', fontWeight: '600' }}>
                 ${formatNumber(company.usd_value)}
               </span>
@@ -219,7 +219,7 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
               paddingBottom: '0.75rem',
               borderBottom: '1px solid #333'
             }}>
-              <span style={{ color: '#888' }}>Unrealized P/L:</span>
+              <span style={{ color: '#000' }}>Unrealized P/L:</span>
               <span style={{ 
                 color: unrealizedPL >= 0 ? '#4ade80' : '#ff6b6b', 
                 fontWeight: '600' 
@@ -231,7 +231,7 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
               display: 'flex', 
               justifyContent: 'space-between'
             }}>
-              <span style={{ color: '#888' }}>Return on Investment:</span>
+              <span style={{ color: '#000' }}>Return on Investment:</span>
               <span style={{ 
                 color: unrealizedPLPercent >= 0 ? '#4ade80' : '#ff6b6b', 
                 fontWeight: '600',
@@ -253,7 +253,7 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
         }}>
           <div style={{ 
             fontSize: '0.75rem', 
-            color: '#888', 
+            color: '#000', 
             marginBottom: '1rem',
             textTransform: 'uppercase',
             fontWeight: '600'
@@ -267,19 +267,19 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
             fontSize: '0.9rem'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#888' }}>Circulating Supply Held:</span>
+              <span style={{ color: '#000' }}>Circulating Supply Held:</span>
               <span style={{ color: '#ccc', fontWeight: '600' }}>
                 {company.percentage_of_supply?.toFixed(4)}%
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#888' }}>Total Supply Held:</span>
+              <span style={{ color: '#000' }}>Total Supply Held:</span>
               <span style={{ color: '#ccc', fontWeight: '600' }}>
                 {((company.btc_holdings / 21000000) * 100).toFixed(4)}%
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#888' }}>Rank by Holdings:</span>
+              <span style={{ color: '#000' }}>Rank by Holdings:</span>
               <span style={{ color: '#00b3ff', fontWeight: '600' }}>
                 #{company.id}
               </span>
@@ -297,7 +297,7 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
         }}>
           <div style={{ 
             fontSize: '0.75rem', 
-            color: '#888', 
+            color: '#000', 
             marginBottom: '1rem',
             textTransform: 'uppercase',
             fontWeight: '600'
@@ -339,7 +339,7 @@ function CompanyDetailModal({ company, btcPrice, onClose }) {
         }}>
           <div style={{ 
             fontSize: '0.75rem', 
-            color: '#888', 
+            color: '#000', 
             marginBottom: '0.5rem',
             textTransform: 'uppercase',
             fontWeight: '600'

@@ -77,170 +77,170 @@ function MiningEconomics() {
       }}>
         {/* Block Subsidy */}
         <div style={{
-          backgroundColor: '#1a1a1a',
+          backgroundColor: '#ffffffff',
           padding: '1.5rem',
           borderRadius: '8px',
           border: '1px solid #333'
         }}>
           <div style={{ 
             fontSize: '0.75rem', 
-            color: '#f97316', 
+            color: '#0a0909ff',backgroundColor: '#ffffffff', 
             marginBottom: '0.5rem',
             fontWeight: '700',
             letterSpacing: '0.05em',
             textTransform: 'uppercase',
-            borderLeft: '3px solid #f97316',
+            borderLeft: '3px solid #000000',
             paddingLeft: '0.5rem'
           }}>
             Mining Economics
           </div>
-          <div style={{ fontSize: '0.7rem', color: '#888', marginBottom: '0.3rem' }}>
+          <div style={{ fontSize: '0.7rem',backgroundColor: '#ffffffff', color: '#000', marginBottom: '0.3rem' }}>
             Block Subsidy
           </div>
           <div style={{ 
             fontSize: '1.8rem', 
-            fontWeight: 'bold',
-            color: '#f97316'
+            fontWeight: 'bold',backgroundColor: '#ffffffff',
+            color: '#000000'
           }}>
             {miningData.blockSubsidy.toFixed(3)} BTC
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.5rem' }}>
+          <div style={{ fontSize: '0.75rem', color: '#000000', marginTop: '0.5rem' }}>
             ${miningData.blockSubsidyValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
           </div>
         </div>
 
         {/* Average Fees per Block */}
         <div style={{
-          backgroundColor: '#1a1a1a',
+          backgroundColor: '#ffffffff',
           padding: '1.5rem',
           borderRadius: '8px',
-          border: '1px solid #333'
+          border: '1px solid #000000'
         }}>
           <div style={{ 
             fontSize: '0.75rem', 
-            color: '#f97316', 
+            color: '#ffff', 
             marginBottom: '0.5rem',
             fontWeight: '700',
             letterSpacing: '0.05em',
             textTransform: 'uppercase',
-            borderLeft: '3px solid #f97316',
+            borderLeft: '3px solid #000000',
             paddingLeft: '0.5rem'
           }}>
             Mining Economics
           </div>
-          <div style={{ fontSize: '0.7rem', color: '#888', marginBottom: '0.3rem' }}>
+          <div style={{ fontSize: '0.7rem', color: '#000', marginBottom: '0.3rem' }}>
             Avg. Fees per Block
           </div>
           <div style={{ 
             fontSize: '1.8rem', 
             fontWeight: 'bold',
-            color: '#f97316'
+            color: '#000000'
           }}>
             {miningData.avgFeesPerBlock > 0 ? miningData.avgFeesPerBlock.toFixed(4) : '0.0000'} BTC
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.5rem' }}>
+          <div style={{ fontSize: '0.75rem', color: '#000000', marginTop: '0.5rem' }}>
             {miningData.avgFeesVsReward}% of block reward
           </div>
         </div>
 
         {/* Daily PHash/s Revenue */}
         <div style={{
-          backgroundColor: '#1a1a1a',
+          backgroundColor: '#ffffffff',color: '#000000',
           padding: '1.5rem',
           borderRadius: '8px',
           border: '1px solid #333'
         }}>
           <div style={{ 
             fontSize: '0.75rem', 
-            color: '#f97316', 
+            color: '#ffffffff', 
             marginBottom: '0.5rem',
             fontWeight: '700',
             letterSpacing: '0.05em',
             textTransform: 'uppercase',
-            borderLeft: '3px solid #f97316',
+            borderLeft: '3px solid #000000',
             paddingLeft: '0.5rem'
           }}>
             Mining Economics
           </div>
-          <div style={{ fontSize: '0.7rem', color: '#888', marginBottom: '0.3rem' }}>
+          <div style={{ fontSize: '0.7rem', backgroundColor: '#ffffffff', color: '#000', marginBottom: '0.3rem' }}>
             Daily PHash/s Revenue
           </div>
           <div style={{ 
             fontSize: '1.8rem', 
             fontWeight: 'bold',
-            color: '#f97316'
+            color: '#000000'
           }}>
             {miningData.dailyPHashRevenueSats.toLocaleString()} sats
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.5rem' }}>
+          <div style={{ fontSize: '0.75rem', color: '#000000', marginTop: '0.5rem' }}>
             ${miningData.dailyPHashRevenueUSD.toLocaleString(undefined, { maximumFractionDigits: 2 })}
           </div>
         </div>
 
         {/* Network Hashrate */}
         <div style={{
-          backgroundColor: '#1a1a1a',
+          backgroundColor: '#ffffff',color: '#000000',
           padding: '1.5rem',
           borderRadius: '8px',
           border: '1px solid #333'
         }}>
           <div style={{ 
             fontSize: '0.75rem', 
-            color: '#f97316', 
+            color: '#000000',  backgroundColor: '#ffffffff',
             marginBottom: '0.5rem',
             fontWeight: '700',
             letterSpacing: '0.05em',
             textTransform: 'uppercase',
-            borderLeft: '3px solid #f97316',
+            borderLeft: '3px solid #000000',
             paddingLeft: '0.5rem'
           }}>
             Mining Economics
           </div>
-          <div style={{ fontSize: '0.7rem', color: '#888', marginBottom: '0.3rem' }}>
+          <div style={{ fontSize: '0.7rem', color: '#000', marginBottom: '0.3rem' }}>
             Network Hashrate
           </div>
           <div style={{ 
             fontSize: '1.8rem', 
             fontWeight: 'bold',
-            color: '#f97316'
+            color: '#000000'
           }}>
             {miningData.networkHashrateEH ? miningData.networkHashrateEH.toFixed(2) : '0.00'} EH/s
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.5rem' }}>
+          <div style={{ fontSize: '0.75rem', color: '#000000', marginTop: '0.5rem' }}>
             {miningData.networkHashratePH ? formatNumber(miningData.networkHashratePH, 2) : '0'} PH/s
           </div>
         </div>
 
         {/* Network Difficulty */}
         <div style={{
-          backgroundColor: '#1a1a1a',
+          backgroundColor: '#ffffffff',
           padding: '1.5rem',
           borderRadius: '8px',
           border: '1px solid #333'
         }}>
           <div style={{ 
             fontSize: '0.75rem', 
-            color: '#f97316', 
+            color: '#000000', 
             marginBottom: '0.5rem',
             fontWeight: '700',
             letterSpacing: '0.05em',
             textTransform: 'uppercase',
-            borderLeft: '3px solid #f97316',
+            borderLeft: '3px solid #000000',
             paddingLeft: '0.5rem'
           }}>
             Mining Economics
           </div>
-          <div style={{ fontSize: '0.7rem', color: '#888', marginBottom: '0.3rem' }}>
+          <div style={{ fontSize: '0.7rem', color: '#000', marginBottom: '0.3rem' }}>
             Network Difficulty
           </div>
           <div style={{ 
             fontSize: '1.8rem', 
             fontWeight: 'bold',
-            color: '#f97316'
+            color: '#000000'
           }}>
             {miningData.difficulty > 0 ? formatNumber(miningData.difficulty, 2) + 'T' : 'Loading...'}
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.5rem' }}>
+          <div style={{ fontSize: '0.75rem', color: '#000000', marginTop: '0.5rem' }}>
             ~{miningData.blocksPerDay} blocks/day
           </div>
         </div>
