@@ -26,6 +26,8 @@ import pricePerformanceRoutes from "./app/routes/pricePerformanceRoutes.js";   /
 import { startBlockPolling } from "./app/services/blockPoller.js";
 import { startTreasuryUpdater } from "./app/services/treasuryUpdater.js";
 import { initializeHistoricalData } from "./app/services/priceHistoryFetcher.js";
+import { initializeHashrateHistory, startHashratePolling } from "./app/services/hashratePoller.js";
+import { initializeDifficultyHistory, startDifficultyPolling } from "./app/services/difficultyPoller.js";
 
 // Candlestick backfill script
 import { createOhlcvTable, updateOhlcvData } from "./scripts/backfillCoindesk.js";
@@ -43,8 +45,12 @@ createOhlcvTable();
 
 // Background processes
 initializeHistoricalData();
+initializeHashrateHistory();
+initializeDifficultyHistory();
 startBlockPolling();
 startTreasuryUpdater();
+startHashratePolling();
+startDifficultyPolling();
 
 // Start periodic OHLCV updates (every 5 minutes)
 updateOhlcvData();

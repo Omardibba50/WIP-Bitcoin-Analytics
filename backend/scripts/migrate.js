@@ -69,6 +69,30 @@ db.exec(`
     price REAL NOT NULL,
     ts INTEGER NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS hashrate_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    hashrate_ths REAL NOT NULL,
+    timestamp INTEGER NOT NULL UNIQUE,
+    fetched_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS difficulty_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    difficulty REAL NOT NULL,
+    adjustment_pct REAL,
+    block_height INTEGER,
+    timestamp INTEGER NOT NULL UNIQUE,
+    fetched_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS metric_correlations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    metric_name TEXT NOT NULL,
+    correlation_coefficient REAL NOT NULL,
+    timespan TEXT NOT NULL,
+    calculated_at INTEGER NOT NULL
+  );
 `);
 
 // ---------------------
@@ -79,6 +103,9 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_predictions_model_ts ON predictions(model_id, ts DESC);
   CREATE INDEX IF NOT EXISTS idx_blocks_timestamp ON blockchain_blocks(timestamp DESC);
   CREATE INDEX IF NOT EXISTS idx_treasuries_holdings ON corporate_treasuries(btc_holdings DESC);
+  CREATE INDEX IF NOT EXISTS idx_hashrate_timestamp ON hashrate_history(timestamp DESC);
+  CREATE INDEX IF NOT EXISTS idx_difficulty_timestamp ON difficulty_history(timestamp DESC);
+  CREATE INDEX IF NOT EXISTS idx_correlations_metric ON metric_correlations(metric_name, timespan, calculated_at DESC);
 `);
 
 // Done

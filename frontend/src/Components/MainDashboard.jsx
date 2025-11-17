@@ -13,10 +13,11 @@ import PredictedNextBlock from './PredictedNextBlock';
 import PriceCards from './PriceCards';
 import PriceChart from './PriceChart';
 import ModelChart from './ModelChart';
-import MiningEconomics from './MiningEconomics';
-import PredictedNextBlock from './PredictedNextBlock';
 import LiveModelsChart from "./LiveModelsChart";
 import PricePerformanceChart from "./PricePerformanceChart";
+import HashRateChart from './HashRateChart';
+import DifficultyChart from './DifficultyChart';
+import CorrelationDashboard from './CorrelationDashboard';
 import { priceApi, modelApi, predictionApi } from '../services/api';
 
 ChartJS.register(
@@ -854,6 +855,16 @@ function MainDashboard() {
                         <BitcoinMetrics symbol={searchTerm} />
                         <MiningEconomics />
                         <PredictedNextBlock />
+                        
+                        {/* Hash Rate and Difficulty Analysis */}
+                        <h2 style={{ color: '#ffffff', marginTop: '2.5rem', marginBottom: '1rem', fontSize: '1.3rem' }}>Hash Rate & Difficulty Analysis</h2>
+                        <HashRateChart />
+                        <DifficultyChart />
+                        
+                        {/* Correlation Analysis */}
+                        <h2 style={{ color: '#ffffff', marginTop: '2.5rem', marginBottom: '1rem', fontSize: '1.3rem' }}>Correlation Analysis</h2>
+                        <CorrelationDashboard />
+                        
                         <BlockchainBlocks />
                         <CorporateTreasuries />
                     </>
@@ -867,25 +878,55 @@ function MainDashboard() {
             </main>
             {/* FOOTER SECTION */}
       <footer className="dashboard-footer">
-        <p>© {new Date().getFullYear()} BTC predict | All Rights Reserved</p>
-        <p>
-          Developed by <strong>Pavan Mamidi</strong> •{' '}
-          <a
-            href="mailto:decentralized.dev@gmail.com"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            decentralized.dev@gmail.com
-          </a>{' '}
-          |{' '}
-          <a
-            href="https://github.com/decentralized-dev"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            GitHub
-          </a>
-        </p>
+        <div style={{ 
+          maxWidth: '1400px', 
+          margin: '0 auto',
+          padding: '2rem 1rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem'
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: '600' }}>
+              © {new Date().getFullYear()} Bitcoin Analytics Dashboard
+            </p>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#999' }}>
+              Developed as a Work Integrated Project for Blockchain Development Program
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <a
+              href="mailto:decentralized.dev@gmail.com"
+              style={{ 
+                color: '#00b3ff',
+                textDecoration: 'none',
+                fontSize: '0.85rem',
+                transition: 'opacity 0.2s'
+              }}
+              onMouseEnter={(e) => e.target.style.opacity = '0.7'}
+              onMouseLeave={(e) => e.target.style.opacity = '1'}
+            >
+              📧 Contact
+            </a>
+            <a
+              href="https://github.com/MamidiPavanReddy"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ 
+                color: '#00b3ff',
+                textDecoration: 'none',
+                fontSize: '0.85rem',
+                transition: 'opacity 0.2s'
+              }}
+              onMouseEnter={(e) => e.target.style.opacity = '0.7'}
+              onMouseLeave={(e) => e.target.style.opacity = '1'}
+            >
+              🔗 GitHub
+            </a>
+          </div>
+        </div>
       </footer>
         </div>
     );
