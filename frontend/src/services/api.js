@@ -3,7 +3,8 @@
  * Handles error handling, retries, and response formatting
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+// Use relative path for development (Vite proxy) or full URL for production
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 class ApiError extends Error {
   constructor(message, status, data) {
@@ -210,6 +211,61 @@ export const healthApi = {
   async check() {
     const response = await fetchWithErrorHandling(`${API_BASE_URL}/health`);
     return response;
+  },
+};
+
+/**
+ * AI Prediction API
+ */
+export const aiApi = {
+  /**
+   * Get AI service status
+   */
+  async getStatus() {
+    const response = await fetchWithErrorHandling(`${API_BASE_URL}/ai/status`);
+    return response;
+  },
+
+  /**
+   * Get latest AI prediction
+   */
+  async getLatestPrediction() {
+    const response = await fetchWithErrorHandling(`${API_BASE_URL}/ai/predictions/latest`);
+    return response.prediction;
+  },
+
+  /**
+   * Get prediction history
+   */
+  async getPredictionHistory(limit = 50, offset = 0) {
+    const response = await fetchWithErrorHandling(
+      `${API_BASE_URL}/ai/predictions/history?limit=${limit}&offset=${offset}`
+    );
+    return response;
+  },
+
+  /**
+   * Get model metrics and performance
+   */
+  async getModelMetrics() {
+    const response = await fetchWithErrorHandling(`${API_BASE_URL}/ai/model/metrics`);
+    return response;
+  },
+
+  /**
+   * Get model information
+   */
+  async getModelInfo() {
+    const response = await fetchWithErrorHandling(`${API_BASE_URL}/ai/model/info`);
+    return response;
+  },
+
+  /**
+   * Generate new prediction on-demand
+   */
+  async generatePrediction() {
+    const response = await fetchWithErrorHandling(`${API_BASE_URL}/ai/predictions/generate`);
+    return response.prediction;
   },
 };
 

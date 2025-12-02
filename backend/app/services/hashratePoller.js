@@ -12,13 +12,22 @@ export async function fetchHistoricalHashrate(days = 30) {
     // Blockchain.info API for hashrate (free, no API key needed)
     const url = `https://api.blockchain.info/charts/hash-rate?timespan=${days}days&format=json&sampled=true&cors=true`;
     
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      redirect: 'follow'
+    });
     
     if (!response.ok) {
       throw new Error(`Blockchain.info API returned status: ${response.status}`);
     }
     
-    const result = await response.json();
+    const text = await response.text();
+    
+    // Check if response is HTML (error page) instead of JSON
+    if (text.includes('<!DOCTYPE') || text.includes('<html>')) {
+      throw new Error('Blockchain.info returned HTML instead of JSON');
+    }
+    
+    const result = JSON.parse(text);
     
     if (!result.values || !Array.isArray(result.values)) {
       throw new Error('Invalid response format from blockchain.info');

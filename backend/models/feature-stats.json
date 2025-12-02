@@ -1,0 +1,26 @@
+{
+  "price": {
+    "min": 74810.01,
+    "max": 126011.18,
+    "mean": 102459.77194977186,
+    "std": 11129.431736598113
+  },
+  "hashrate": {
+    "min": null,
+    "max": null,
+    "mean": null,
+    "std": 1
+  },
+  "difficulty": {
+    "min": 102289407543324,
+    "max": 155973032196072,
+    "mean": 123694796041070.72,
+    "std": 13980148375957.578
+  },
+  "volume": {
+    "min": null,
+    "max": null,
+    "mean": null,
+    "std": null
+  }
+}

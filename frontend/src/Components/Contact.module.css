@@ -1,0 +1,64 @@
+.container {
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-lg, 12px);
+}
+
+.title {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #f8fafc);
+  text-align: center;
+}
+
+.memberCard {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+}
+
+.memberCardBorder {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.field {
+  margin-bottom: 0.5rem;
+  color: var(--color-text-secondary, #cbd5e1);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.field strong {
+  color: var(--color-text-primary, #f8fafc);
+  margin-right: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .field {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+}

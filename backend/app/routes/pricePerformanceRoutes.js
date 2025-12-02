@@ -3,7 +3,8 @@ import { fetchCachedCoinGecko } from "../utils/coingeckoCache.js";
 
 const router = express.Router();
 
-router.get("/performance", async (_req, res) => {
+// Internal handler to avoid duplicating logic
+async function handlePerformance(_req, res) {
   try {
     const url =
       "https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false";
@@ -43,11 +44,16 @@ router.get("/performance", async (_req, res) => {
       changeAbs: (price * p.changePct) / 100,
     }));
 
-    res.json({ priceUSD: price, performance, source: "live" });
+  res.json({ priceUSD: price, performance, source: "live" });
   } catch (err) {
     console.error("⚠️ Error in performance route:", err.message);
     res.status(500).json({ error: "Failed to fetch performance" });
   }
-});
+}
+
+// Preserve existing path for backwards compatibility
+router.get("/performance", handlePerformance);
+// New root path so mounting at /api/price-performance maps directly
+router.get("/", handlePerformance);
 
 export default router;

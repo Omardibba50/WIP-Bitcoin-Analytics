@@ -6,10 +6,15 @@ import {
   getAllMetrics,
   getHashrateHistoryWithPrice,
   getDifficultyHistoryWithPrice,
-  getCorrelations
+  getCorrelations,
+  getMetricsOverview,
+  getStockToFlowData
 } from '../controllers/metricsController.js';
 
 const router = express.Router();
+
+// GET /api/metrics/overview - Dashboard metrics overview
+router.get('/overview', getMetricsOverview);
 
 // GET /api/metrics/supply
 router.get('/supply', getSupplyMetrics);
@@ -23,6 +28,9 @@ router.get('/treasury-totals', getTreasuryTotals);
 // GET /api/metrics/all
 router.get('/all', getAllMetrics);
 
+// GET /api/metrics/hashrate - Get hashrate data (with optional date range)
+router.get('/hashrate', getHashrateHistoryWithPrice);
+
 // GET /api/metrics/hashrate/history - Get historical hashrate with price
 router.get('/hashrate/history', getHashrateHistoryWithPrice);
 
@@ -31,5 +39,8 @@ router.get('/difficulty/history', getDifficultyHistoryWithPrice);
 
 // GET /api/metrics/correlations - Get metric correlations
 router.get('/correlations', getCorrelations);
+
+// GET /api/metrics/stock-to-flow - Get stock-to-flow data
+router.get('/stock-to-flow', getStockToFlowData);
 
 export default router;

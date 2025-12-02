@@ -28,13 +28,21 @@ export async function fetchBitcoinSupplyMetrics() {
 
   try {
     // Fetch real-time supply data from blockchain.info API
-    const response = await fetch('https://blockchain.info/q/totalbc');
+    const response = await fetch('https://blockchain.info/q/totalbc', {
+      redirect: 'follow'
+    });
     
     if (!response.ok) {
-      throw new Error('Failed to fetch supply from blockchain.info');
+      throw new Error(`Blockchain.info API returned status: ${response.status}`);
     }
     
     const totalSatoshis = await response.text();
+    
+    // Check if response is HTML (error page) instead of plain text
+    if (totalSatoshis.includes('<!DOCTYPE') || totalSatoshis.includes('<html>')) {
+      throw new Error('Blockchain.info returned HTML instead of supply value');
+    }
+    
     const currentSupply = Number(totalSatoshis) / 100000000; // Convert satoshis to BTC
     
     const percentageIssued = (currentSupply / TOTAL_BTC_SUPPLY) * 100;

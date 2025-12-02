@@ -1,0 +1,241 @@
+.container {
+  margin-bottom: 2rem;
+}
+
+.headerContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.header {
+  color: var(--color-text-primary, #f8fafc);
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.statusIndicator {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary, #94a3b8);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.statusDot.live {
+  background-color: var(--color-success, #10b981);
+}
+
+.statusDot.loading {
+  background-color: var(--color-warning, #f59e0b);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Charts */
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.chartCard {
+  padding: 1.5rem;
+}
+
+.chartTitle {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: var(--color-text-primary, #f8fafc);
+  font-weight: 600;
+}
+
+.chartContainer {
+  height: 200px;
+}
+
+/* Blocks List */
+.blocksList {
+  overflow: hidden;
+  padding: 0;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 100px 1fr 120px 100px 100px 150px;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background-color: var(--color-bg-secondary, #1e293b);
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary, #94a3b8);
+  border-bottom: 1px solid var(--color-border, #334155);
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 100px 1fr 120px 100px 100px 150px;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.tableRow.withBorder {
+  border-bottom: 1px solid var(--color-border, #334155);
+}
+
+.tableRow:hover {
+  background-color: var(--color-bg-secondary, #1e293b);
+  transform: translateX(4px);
+}
+
+.blockHeight {
+  color: var(--color-accent, #f7931a);
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+}
+
+.blockHash {
+  color: var(--color-text-secondary, #94a3b8);
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.blockTime {
+  color: var(--color-text-secondary, #94a3b8);
+  font-size: 0.9rem;
+}
+
+.blockSize {
+  color: var(--color-text-primary, #f8fafc);
+}
+
+.blockTxCount {
+  color: var(--color-text-primary, #f8fafc);
+  font-weight: bold;
+}
+
+.blockMiner {
+  color: var(--color-text-secondary, #94a3b8);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Loading/Error States */
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  padding: 2rem;
+}
+
+.error {
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-error, #ef4444);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--color-error, #ef4444);
+  border-radius: var(--border-radius-md, 8px);
+}
+
+.error p {
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 80px 1fr 100px 80px 70px 120px;
+    font-size: 0.8rem;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .headerContainer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .header {
+    font-size: 1.25rem;
+  }
+
+  .chartCard {
+    padding: 1rem;
+  }
+
+  .chartTitle {
+    font-size: 0.9rem;
+  }
+
+  .chartContainer {
+    height: 180px;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 70px 1fr 90px;
+    padding: 0.75rem 1rem;
+  }
+
+  /* Hide less important columns on mobile */
+  .tableHeader div:nth-child(n+4),
+  .tableRow div:nth-child(n+4) {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    font-size: 1.1rem;
+  }
+
+  .chartContainer {
+    height: 150px;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 60px 1fr;
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  /* Show only height and hash on very small screens */
+  .tableHeader div:nth-child(n+3),
+  .tableRow div:nth-child(n+3) {
+    display: none;
+  }
+}

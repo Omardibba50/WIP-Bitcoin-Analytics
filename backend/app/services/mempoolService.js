@@ -42,6 +42,16 @@ export async function fetchMempoolStats() {
     // Calculate next block prediction
     const nextBlockPrediction = await predictNextBlock(mempool);
 
+    // Get current BTC price for USD conversion
+    let btcPrice = 0;
+    try {
+      const { getLatestPrice } = await import('../db/pricesDb.js');
+      const priceData = getLatestPrice('BTC');
+      btcPrice = priceData?.price || 0;
+    } catch (err) {
+      console.warn('⚠️  Could not fetch BTC price for USD conversion');
+    }
+
     const result = {
       // Current mempool stats
       transactionCount: mempool.count || 0,
@@ -57,7 +67,10 @@ export async function fetchMempoolStats() {
       minimumFee: fees?.minimumFee || 0,
       
       // Next block prediction
-      nextBlock: nextBlockPrediction,
+      nextBlock: {
+        ...nextBlockPrediction,
+        totalFeesUSD: nextBlockPrediction.totalFees * btcPrice
+      },
       
       lastUpdated: Date.now()
     };
@@ -196,21 +209,23 @@ async function predictNextBlock(mempoolData) {
     try {
       const [mempoolStats, mempoolBlocks] = await Promise.all([
         fetchJSON('https://mempool.space/api/mempool'),
-        fetchJSON('https://mempool.space/api/v1/fees/mempool-blocks')
+        fetchJSON('https://mempool.space/api/v1/fees/mempool-blocks').catch(() => null)
       ]);
-      const nextBlockPrediction = mempoolBlocks[0];
+      const nextBlockPrediction = mempoolBlocks?.[0];
 
-      if (nextBlockPrediction) {
-        predictedBlockSize = nextBlockPrediction.medianTxWeight / 4; // from weight to vbytes
-        minFeeRate = nextBlockPrediction.minFee;
-        maxFeeRate = nextBlockPrediction.maxFee;
+      if (nextBlockPrediction && nextBlockPrediction.blockSize > 0) {
+        predictedBlockSize = nextBlockPrediction.blockSize; // Already in vbytes
+        minFeeRate = nextBlockPrediction.feeRange?.[0] || nextBlockPrediction.minFee || 1;
+        maxFeeRate = nextBlockPrediction.feeRange?.[nextBlockPrediction.feeRange?.length - 1] || nextBlockPrediction.maxFee || 1;
         
         const avgTxVSize = mempoolStats.vsize / mempoolStats.count || avgTxSize;
         transactionCount = Math.floor(predictedBlockSize / avgTxVSize);
-        accumulatedFees = nextBlockPrediction.medianFee * predictedBlockSize;
+        
+        // Use total fees from the mempool block prediction
+        accumulatedFees = (nextBlockPrediction.totalFees || 0);
 
       } else {
-        // Fallback: calculate based on histogram
+        // Fallback: Use fee histogram to estimate
         const sortedHistogram = [...feeHistogram].sort((a, b) => b[0] - a[0]);
         for (const [feeRate, vsize] of sortedHistogram) {
           if (accumulatedSize + vsize <= BLOCK_SIZE_LIMIT) {
@@ -234,6 +249,27 @@ async function predictNextBlock(mempoolData) {
       }
     } catch (error) {
       console.error('Error during next block prediction:', error);
+      // Use histogram fallback
+      const sortedHistogram = [...feeHistogram].sort((a, b) => b[0] - a[0]);
+      for (const [feeRate, vsize] of sortedHistogram) {
+        if (accumulatedSize + vsize <= BLOCK_SIZE_LIMIT) {
+          accumulatedSize += vsize;
+          accumulatedFees += (feeRate * vsize);
+          transactionCount += Math.ceil(vsize / avgTxSize);
+          maxFeeRate = Math.max(maxFeeRate, feeRate);
+          minFeeRate = feeRate;
+        } else {
+          const remainingSize = BLOCK_SIZE_LIMIT - accumulatedSize;
+          if (remainingSize > 0) {
+            accumulatedSize += remainingSize;
+            accumulatedFees += (feeRate * remainingSize);
+            transactionCount += Math.ceil(remainingSize / avgTxSize);
+            minFeeRate = feeRate;
+          }
+          break;
+        }
+      }
+      predictedBlockSize = accumulatedSize;
     }
 
     const totalFeesBTC = (accumulatedFees || 0) / SATS_PER_BTC;

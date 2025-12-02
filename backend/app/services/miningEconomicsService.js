@@ -114,16 +114,25 @@ async function fetchBlockchainStats() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
+    // Try blockchain.info with redirect following
     const response = await fetch('https://blockchain.info/stats', {
-      signal: controller.signal
+      signal: controller.signal,
+      redirect: 'follow'
     });
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      throw new Error('Failed to fetch blockchain stats');
+      throw new Error(`Blockchain.info API returned status: ${response.status}`);
     }
 
-    const data = await response.json();
+    const text = await response.text();
+    
+    // Check if response is HTML (error page) instead of JSON
+    if (text.includes('<!DOCTYPE') || text.includes('<html>')) {
+      throw new Error('Blockchain.info returned HTML instead of JSON');
+    }
+
+    const data = JSON.parse(text);
     console.log('✅ Blockchain.info stats fetched');
     return data;
 
@@ -202,42 +211,71 @@ async function fetchHashrateData() {
     return cache.hashrate.data;
   }
 
+  // Try blockchain.info first, then fallback to mempool.space
+  let latestHashrate = null;
+  
+  // Attempt 1: blockchain.info
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     const response = await fetch('https://api.blockchain.info/charts/hash-rate?timespan=1days&format=json', {
-      signal: controller.signal
+      signal: controller.signal,
+      redirect: 'follow'
     });
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      throw new Error('Failed to fetch hashrate');
+      throw new Error(`Blockchain.info API returned status: ${response.status}`);
     }
 
-    const data = await response.json();
+    const text = await response.text();
+    
+    // Check if response is HTML (error page) instead of JSON
+    if (text.includes('<!DOCTYPE') || text.includes('<html>')) {
+      throw new Error('Blockchain.info returned HTML instead of JSON');
+    }
+
+    const data = JSON.parse(text);
     
     // Get the latest hashrate value (in TH/s)
-    const latestHashrate = data.values && data.values.length > 0 
+    latestHashrate = data.values && data.values.length > 0 
       ? data.values[data.values.length - 1].y 
       : 0;
 
-    // Cache the result
-    cache.hashrate = { data: latestHashrate, timestamp: Date.now() };
-
-    console.log('✅ Hashrate data fetched:', latestHashrate, 'TH/s');
-    return latestHashrate;
-
+    console.log('✅ Hashrate data fetched from blockchain.info:', latestHashrate, 'TH/s');
+    
   } catch (error) {
-    console.warn('⚠️  Hashrate data failed:', error.message);
+    console.warn('⚠️  Blockchain.info hashrate failed, trying mempool.space:', error.message);
     
-    // Return cached data if available
-    if (cache.hashrate.data) {
-      return cache.hashrate.data;
+    // Attempt 2: mempool.space fallback
+    try {
+      const response = await fetch('https://mempool.space/api/v1/mining/hashrate/24h', {
+        signal: AbortSignal.timeout(10000)
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // mempool.space returns hashrate in EH/s, convert to TH/s
+        latestHashrate = data.currentHashrate ? data.currentHashrate * 1000000 : 0;
+        console.log('✅ Hashrate data fetched from mempool.space:', latestHashrate, 'TH/s');
+      }
+    } catch (fallbackError) {
+      console.warn('⚠️  Mempool.space hashrate fallback also failed:', fallbackError.message);
     }
-    
-    return null;
   }
+
+  // Cache the result if we got data
+  if (latestHashrate !== null) {
+    cache.hashrate = { data: latestHashrate, timestamp: Date.now() };
+  }
+
+  // Return cached data if available, otherwise null
+  if (latestHashrate === null && cache.hashrate.data) {
+    return cache.hashrate.data;
+  }
+  
+  return latestHashrate;
 }
 
 /**
@@ -316,15 +354,22 @@ async function fetchDifficultyData() {
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     const response = await fetch('https://blockchain.info/q/getdifficulty', {
-      signal: controller.signal
+      signal: controller.signal,
+      redirect: 'follow'
     });
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      throw new Error('Failed to fetch difficulty');
+      throw new Error(`Blockchain.info API returned status: ${response.status}`);
     }
 
     const difficultyText = await response.text();
+    
+    // Check if response is HTML (error page) instead of plain text
+    if (difficultyText.includes('<!DOCTYPE') || difficultyText.includes('<html>')) {
+      throw new Error('Blockchain.info returned HTML instead of difficulty value');
+    }
+    
     const difficulty = parseFloat(difficultyText);
 
     console.log('✅ Difficulty data fetched:', difficulty);

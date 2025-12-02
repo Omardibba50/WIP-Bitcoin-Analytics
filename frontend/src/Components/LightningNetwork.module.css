@@ -1,0 +1,127 @@
+.container {
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #f8fafc);
+  margin: 0;
+}
+
+.badge {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #94a3b8);
+  font-style: italic;
+}
+
+/* Stats Grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.statCard {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-md, 8px);
+  padding: 1rem;
+  transition: all 0.2s;
+}
+
+.statCard:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #aaa);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--color-text-primary, #f8fafc);
+  margin-bottom: 0.25rem;
+}
+
+.statSubValue {
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #888);
+}
+
+/* Additional Info */
+.additionalInfo {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(0, 179, 255, 0.1);
+  border: 1px solid rgba(0, 179, 255, 0.2);
+  border-radius: var(--border-radius-md, 8px);
+}
+
+.additionalGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+
+.infoLabel {
+  color: var(--color-text-muted, #888);
+  margin-bottom: 0.25rem;
+}
+
+.infoValue {
+  color: var(--color-text-primary, #fff);
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .additionalGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .statValue {
+    font-size: 1.25rem;
+  }
+
+  .additionalGrid {
+    grid-template-columns: 1fr;
+  }
+}

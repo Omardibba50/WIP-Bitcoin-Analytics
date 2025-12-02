@@ -1,5 +1,10 @@
 import React from 'react';
+import styles from './Contact.module.css';
 
+/**
+ * Contact Component
+ * Displays team contact information
+ */
 const teamMembers = [
   {
     name: 'John Doe',
@@ -13,25 +18,27 @@ const teamMembers = [
     phone: '+1 987 654 3210',
     address: '456 Elm St, City, Country',
   },
-
 ];
 
 const Contact = () => {
   return (
-    <div style={{ maxWidth: 500, margin: '2rem auto', padding: '2rem', border: '1px solid #ccc', borderRadius: 8 }}>
-      <h2>Team Contact Details</h2>
+    <div className={styles.container}>
+      <h2 className={styles.title}>Team Contact Details</h2>
       {teamMembers.map((member, idx) => (
-        <div key={idx} style={{ marginBottom: '2rem', paddingBottom: '1rem', borderBottom: idx !== teamMembers.length - 1 ? '1px solid #eee' : 'none' }}>
-          <div style={{ marginBottom: '0.5rem' }}>
+        <div 
+          key={idx} 
+          className={`${styles.memberCard} ${idx !== teamMembers.length - 1 ? styles.memberCardBorder : ''}`}
+        >
+          <div className={styles.field}>
             <strong>Name:</strong> {member.name}
           </div>
-          <div style={{ marginBottom: '0.5rem' }}>
+          <div className={styles.field}>
             <strong>Email:</strong> {member.email}
           </div>
-          <div style={{ marginBottom: '0.5rem' }}>
+          <div className={styles.field}>
             <strong>Phone:</strong> {member.phone}
           </div>
-          <div>
+          <div className={styles.field}>
             <strong>Address:</strong> {member.address}
           </div>
         </div>

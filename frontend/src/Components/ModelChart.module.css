@@ -1,0 +1,41 @@
+.container {
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  min-height: 350px;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--color-text-primary, #ffffff);
+}
+
+.chartContainer {
+  height: 300px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .chartContainer {
+    height: 250px;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1rem;
+  }
+
+  .chartContainer {
+    height: 200px;
+  }
+}

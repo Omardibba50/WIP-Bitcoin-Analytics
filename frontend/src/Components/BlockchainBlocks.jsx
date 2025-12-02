@@ -1,38 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Bar, Line } from 'react-chartjs-2';
-import { SkeletonChart } from './LoadingSpinner';
+import { useDataFetch } from '../hooks/useDataFetch';
+import { blockApi } from '../services/apiClient';
+import { Card, LoadingSpinner } from '../components/ui';
+import { createBarChart, createLineChart } from '../utils/chartFactory';
 import BlockDetailModal from './BlockDetailModal';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import styles from './BlockchainBlocks.module.css';
 
 function BlockchainBlocks() {
-  const [blocks, setBlocks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [selectedBlock, setSelectedBlock] = useState(null);
 
-  useEffect(() => {
-    const fetchBlocks = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/blocks/latest?limit=10`);
-        if (!response.ok) throw new Error('Failed to fetch blocks');
-        const data = await response.json();
-        setBlocks(data.data || []);
-        setError(null);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { data: blocks, loading, error } = useDataFetch(
+    () => blockApi.getLatest(10),
+    {
+      pollInterval: 60000, // 1 minute
+      cacheKey: 'blocks-latest'
+    }
+  );
 
-    fetchBlocks();
-    const interval = setInterval(fetchBlocks, 60000); // Update every minute
-    return () => clearInterval(interval);
-  }, []);
-
-  // Format time ago
   const timeAgo = (timestamp) => {
     const seconds = Math.floor((Date.now() - timestamp) / 1000);
     if (seconds < 60) return `${seconds}s ago`;
@@ -42,193 +27,95 @@ function BlockchainBlocks() {
     return `${hours}h ago`;
   };
 
-  // Format block size
   const formatSize = (bytes) => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   };
 
-  // Prepare chart data for block sizes
-  const blockSizeChartData = {
-    labels: blocks.map(b => `#${b.height}`),
-    datasets: [{
-      label: 'Block Size (MB)',
-      data: blocks.map(b => (b.size / (1024 * 1024)).toFixed(2)),
-      backgroundColor: 'rgba(0, 179, 255, 0.6)',
-      borderColor: '#00b3ff',
-      borderWidth: 2,
-      borderRadius: 6,
-    }]
-  };
-
-  // Prepare chart data for transaction counts
-  const txCountChartData = {
-    labels: blocks.map(b => `#${b.height}`),
-    datasets: [{
-      label: 'Transactions',
-      data: blocks.map(b => b.tx_count),
-      fill: false,
-      borderColor: '#4ade80',
-      backgroundColor: '#ffffff',
-      tension: 0.4,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      pointBackgroundColor: '#4ade80',
-    }]
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        labels: { color: '#fff' }
-      }
-    },
-    scales: {
-      x: {
-        ticks: { color: '#000' },
-        grid: { color: '#333' }
-      },
-      y: {
-        ticks: { color: '#000' },
-        grid: { color: '#333' }
-      }
-    }
-  };
-
-  if (loading && blocks.length === 0) {
+  // Loading state
+  if (loading && (!blocks || blocks.length === 0)) {
     return (
-      <div style={{ marginBottom: '2rem' }}>
-        <h2 style={{ 
-          color: '#000000', 
-          margin: '0 0 1rem 0',
-          fontSize: '1.5rem',
-          fontWeight: 'bold'
-        }}>
-          Latest Blockchain Blocks
-        </h2>
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: '1fr 1fr', 
-          gap: '1rem',
-          marginBottom: '1.5rem'
-        }}>
-          <SkeletonChart height="200px" />
-          <SkeletonChart height="200px" />
+      <div className={styles.container}>
+        <h2 className={styles.header}>Latest Blockchain Blocks</h2>
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && (!blocks || blocks.length === 0)) {
+    return (
+      <div className={styles.container}>
+        <h2 className={styles.header}>Latest Blockchain Blocks</h2>
+        <div className={styles.error}>
+          <p>Error loading blocks: {error.message || error}</p>
         </div>
-        <SkeletonChart height="300px" />
       </div>
     );
   }
 
-  if (error && blocks.length === 0) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center', color: '#ff6b6b' }}>
-        Error loading blocks: {error}
-      </div>
-    );
-  }
+  if (!blocks || blocks.length === 0) return null;
+
+  const labels = blocks.map(b => `#${b.height}`);
+
+  // Prepare block size chart config
+  const blockSizeConfig = createBarChart(
+    [
+      {
+        label: 'Block Size (MB)',
+        data: blocks.map(b => Number((b.size / (1024 * 1024)).toFixed(2))),
+      },
+    ],
+    labels,
+    { title: '' }
+  );
+
+  // Prepare transaction count chart config
+  const txCountConfig = createLineChart(
+    [
+      {
+        label: 'Transactions',
+        data: blocks.map(b => b.tx_count),
+      },
+    ],
+    labels,
+    { title: '' }
+  );
 
   return (
-    <div style={{ marginBottom: '2rem' }}>
+    <div className={styles.container}>
       {/* Header */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '1rem'
-      }}>
-        <h2 style={{ 
-          color: '#ffffff', 
-          margin: 0,
-          fontSize: '1.5rem',
-          fontWeight: 'bold'
-        }}>
-          Latest Blockchain Blocks
-        </h2>
-        <div style={{ 
-          fontSize: '0.9rem', 
-          color: '#000',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem'
-        }}>
-          <div style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            backgroundColor: loading ? '#ffa500' : '#4ade80'
-          }} />
+      <div className={styles.headerContainer}>
+        <h2 className={styles.header}>Latest Blockchain Blocks</h2>
+        <div className={styles.statusIndicator}>
+          <div className={`${styles.statusDot} ${loading ? styles.loading : styles.live}`} />
           {loading ? 'Updating...' : 'Live'}
         </div>
       </div>
 
       {/* Charts Grid */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: '1fr 1fr', 
-        gap: '1rem',
-        marginBottom: '1.5rem'
-      }}>
+      <div className={styles.chartsGrid}>
         {/* Block Size Chart */}
-        <div style={{
-          backgroundColor: '#ffffff',
-          padding: '1.5rem',
-          borderRadius: '8px',
-          border: '1px solid #ccc'
-        }}>
-          <h3 style={{ 
-            margin: '0 0 1rem 0', 
-            fontSize: '1rem',
-            color: '#ffffff'
-          }}>
-            Block Sizes
-          </h3>
-          <div style={{ height: '200px' }}>
-            <Bar data={blockSizeChartData} options={chartOptions} />
+        <Card className={styles.chartCard}>
+          <h3 className={styles.chartTitle}>Block Sizes</h3>
+          <div className={styles.chartContainer}>
+            <Bar data={blockSizeConfig.data} options={blockSizeConfig.options} />
           </div>
-        </div>
+        </Card>
 
         {/* Transaction Count Chart */}
-        <div style={{
-          backgroundColor: '#ffffff',
-          padding: '1.5rem',
-          borderRadius: '8px',
-          border: '1px solid #ccc'
-        }}>
-          <h3 style={{ 
-            margin: '0 0 1rem 0', 
-            fontSize: '1rem',
-            color: '#ffffff'
-          }}>
-            Transaction Counts
-          </h3>
-          <div style={{ height: '200px' }}>
-            <Line data={txCountChartData} options={chartOptions} />
+        <Card className={styles.chartCard}>
+          <h3 className={styles.chartTitle}>Transaction Counts</h3>
+          <div className={styles.chartContainer}>
+            <Line data={txCountConfig.data} options={txCountConfig.options} />
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Blocks List */}
-      <div style={{
-        backgroundColor: '#ffffff',
-        borderRadius: '8px',
-        border: '1px solid #ccc',
-        overflow: 'hidden'
-      }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '100px 1fr 120px 100px 100px 150px',
-          gap: '1rem',
-          padding: '1rem 1.5rem',
-          backgroundColor: '#ffffff',
-          fontWeight: 'bold',
-          fontSize: '0.85rem',
-          color: '#000',
-          borderBottom: '1px solid #333'
-        }}>
+      <Card className={styles.blocksList}>
+        <div className={styles.tableHeader}>
           <div>HEIGHT</div>
           <div>HASH</div>
           <div>TIME</div>
@@ -240,67 +127,18 @@ function BlockchainBlocks() {
         {blocks.map((block, idx) => (
           <div
             key={block.height}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '100px 1fr 120px 100px 100px 150px',
-              gap: '1rem',
-              padding: '1rem 1.5rem',
-              borderBottom: idx < blocks.length - 1 ? '1px solid #ccc' : 'none',
-              transition: 'all 0.2s',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#ffffff';
-              e.currentTarget.style.transform = 'translateX(4px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.transform = 'translateX(0)';
-            }}
+            className={`${styles.tableRow} ${idx < blocks.length - 1 ? styles.withBorder : ''}`}
             onClick={() => setSelectedBlock(block)}
           >
-            <div style={{ 
-              color: '#000', 
-              fontWeight: 'bold',
-              fontFamily: 'monospace'
-            }}>
-              {block.height}
-            </div>
-            <div style={{ 
-              color: '#000',
-              backgroundColor: '#ffffff',
-              fontFamily: 'monospace',
-              fontSize: '0.85rem',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
-            }}>
-              {block.hash}
-            </div>
-            <div style={{ color: '#000',backgroundColor: '#ffffff', fontSize: '0.9rem' }}>
-              {timeAgo(block.timestamp)}
-            </div>
-            <div style={{ color: '#000',backgroundColor: '#ffffff' }}>
-              {formatSize(block.size)}
-            </div>
-            <div style={{ 
-              color: '#000',backgroundColor: '#ffffff',
-              fontWeight: 'bold'
-            }}>
-              {block.tx_count}
-            </div>
-            <div style={{ 
-              color: '#000',backgroundColor: '#ffffff',
-              fontSize: '0.85rem',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
-            }}>
-              {block.miner}
-            </div>
+            <div className={styles.blockHeight}>{block.height}</div>
+            <div className={styles.blockHash}>{block.hash}</div>
+            <div className={styles.blockTime}>{timeAgo(block.timestamp)}</div>
+            <div className={styles.blockSize}>{formatSize(block.size)}</div>
+            <div className={styles.blockTxCount}>{block.tx_count}</div>
+            <div className={styles.blockMiner}>{block.miner}</div>
           </div>
         ))}
-      </div>
+      </Card>
 
       {/* Block Detail Modal */}
       {selectedBlock && (

@@ -1,0 +1,321 @@
+.container {
+  padding: var(--spacing-xl, 1.5rem);
+  margin-bottom: var(--spacing-xl, 1.5rem);
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #f8fafc);
+  margin: 0 0 0.25rem 0;
+}
+
+.subtitle {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #94a3b8);
+  margin: 0;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.timespanButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.timespanButton {
+  padding: 0.4rem 0.8rem;
+  background: var(--color-bg-tertiary, #1e293b);
+  color: var(--color-text-secondary, #94a3b8);
+  border: 1px solid var(--color-card-border, #334155);
+  border-radius: var(--border-radius-md, 8px);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.timespanButton:hover {
+  background: var(--color-bg-secondary, #1e293b);
+  transform: translateY(-1px);
+}
+
+.timespanButton.active {
+  background: var(--color-accent, #f7931a);
+  color: var(--color-text-primary, #f8fafc);
+  border-color: var(--color-accent, #f7931a);
+}
+
+.recalculateButton {
+  padding: 0.4rem 0.8rem;
+  background: var(--color-accent, #f7931a);
+  color: var(--color-text-primary, #f8fafc);
+  border: none;
+  border-radius: var(--border-radius-md, 8px);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.recalculateButton:hover:not(.disabled) {
+  background: #ff9b2d;
+  transform: translateY(-1px);
+}
+
+.recalculateButton.disabled {
+  background: var(--color-text-muted, #64748b);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Loading/Error/NoData States */
+.loadingContainer {
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.error {
+  padding: var(--spacing-md, 1rem);
+  text-align: center;
+  color: var(--color-error, #ef4444);
+  background: var(--color-bg-tertiary, #1e293b);
+  border-radius: var(--border-radius-md, 8px);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.error p {
+  margin: 0;
+  font-weight: 500;
+}
+
+.noData {
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary, #94a3b8);
+  gap: var(--spacing-md, 1rem);
+}
+
+.noData p {
+  margin: 0;
+}
+
+.calculateButton {
+  padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
+  background: var(--color-accent, #f7931a);
+  color: var(--color-text-primary, #f8fafc);
+  border: none;
+  border-radius: var(--border-radius-md, 8px);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.calculateButton:hover {
+  background: #ff9b2d;
+  transform: translateY(-1px);
+}
+
+/* Content */
+.content {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: var(--spacing-xl, 1.5rem);
+  align-items: start;
+}
+
+.chartContainer {
+  height: 300px;
+}
+
+/* Table */
+.tableContainer {
+  border: 1px solid var(--color-card-border, #334155);
+  border-radius: var(--border-radius-md, 8px);
+  overflow: hidden;
+}
+
+.tableHeader {
+  background: var(--color-bg-tertiary, #1e293b);
+  padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
+  border-bottom: 1px solid var(--color-card-border, #334155);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text-primary, #f8fafc);
+}
+
+.tableRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
+  font-size: 0.85rem;
+}
+
+.tableRow.withBorder {
+  border-bottom: 1px solid var(--color-card-border, #334155);
+}
+
+.metricInfo {
+  flex: 1;
+}
+
+.metricName {
+  font-weight: 600;
+  color: var(--color-text-primary, #f8fafc);
+  margin-bottom: 0.25rem;
+}
+
+.metricStrength {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #94a3b8);
+}
+
+.correlationValue {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-left: var(--spacing-md, 1rem);
+}
+
+/* Legend */
+.legend {
+  margin-top: var(--spacing-xl, 1.5rem);
+  padding: var(--spacing-md, 1rem);
+  background: var(--color-bg-tertiary, #1e293b);
+  border-radius: var(--border-radius-md, 8px);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #94a3b8);
+}
+
+.legend strong {
+  color: var(--color-text-primary, #f8fafc);
+}
+
+.legendGrid {
+  margin-top: var(--spacing-sm, 0.5rem);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-sm, 0.5rem);
+}
+
+.strongCorr {
+  color: var(--color-primary, #f7931a);
+  font-weight: bold;
+}
+
+.moderateCorr {
+  color: var(--color-info, #3b82f6);
+  font-weight: bold;
+}
+
+.weakCorr {
+  color: var(--color-text-muted, #64748b);
+  font-weight: bold;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .content {
+    grid-template-columns: 1fr;
+  }
+
+  .chartContainer {
+    height: 250px;
+  }
+
+  .tableContainer {
+    margin-top: var(--spacing-md, 1rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .subtitle {
+    font-size: 0.7rem;
+  }
+
+  .controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .timespanButtons {
+    flex: 1;
+  }
+
+  .timespanButton {
+    flex: 1;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .recalculateButton {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .chartContainer {
+    height: 200px;
+  }
+
+  .legendGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: var(--spacing-md, 1rem);
+  }
+
+  .title {
+    font-size: 1rem;
+  }
+
+  .controls {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .timespanButtons,
+  .recalculateButton {
+    width: 100%;
+  }
+
+  .chartContainer {
+    height: 180px;
+  }
+}

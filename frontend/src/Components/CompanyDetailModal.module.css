@@ -1,0 +1,294 @@
+/* Modal Overlay */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 2rem;
+}
+
+/* Modal Container */
+.modal {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  border: 1px solid #333;
+  max-width: 700px;
+  width: 100%;
+  max-height: 85vh;
+  overflow: auto;
+  padding: 2rem;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #333;
+}
+
+.title {
+  margin: 0 0 0.5rem 0;
+  color: #00b3ff;
+  font-size: 1.8rem;
+}
+
+.subtitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: color 0.2s;
+}
+
+.closeButton:hover {
+  color: #fff;
+}
+
+/* Grid Layout */
+.gridTwo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Cards */
+.cardDark {
+  background-color: #0f0f0f;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #333;
+}
+
+.label {
+  font-size: 0.75rem;
+  color: #888;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.largeValue {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+
+.subValue {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+/* Stats Box */
+.statsBox {
+  background-color: #0f0f0f;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #333;
+  margin-bottom: 1.5rem;
+}
+
+.statsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.statRow {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #333;
+}
+
+.statRow:last-child {
+  border-bottom: none;
+}
+
+.roiRow {
+  padding-bottom: 0;
+}
+
+.statLabel {
+  color: #888;
+}
+
+.statValue {
+  color: #ccc;
+  font-weight: 600;
+}
+
+.positiveValue {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.negativeValue {
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+.positiveLarge {
+  color: #4ade80;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.negativeLarge {
+  color: #ff6b6b;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.highlightValue {
+  color: #00b3ff;
+  font-weight: 600;
+}
+
+/* Info Box */
+.infoBox {
+  background-color: #0f0f0f;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #333;
+  margin-bottom: 1.5rem;
+}
+
+.infoContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #ccc;
+  line-height: 1.6;
+}
+
+.infoContent p {
+  margin: 0;
+}
+
+.companyHighlight {
+  color: #00b3ff;
+}
+
+.btcHighlight {
+  color: #4ade80;
+}
+
+.usdHighlight {
+  color: #fbbf24;
+}
+
+/* Footer */
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #333;
+}
+
+.linksRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.link {
+  flex: 1;
+  padding: 0.75rem;
+  text-decoration: none;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.linkPrimary {
+  background-color: #00b3ff;
+  color: white;
+}
+
+.linkPrimary:hover {
+  background-color: #0099dd;
+  transform: translateY(-2px);
+}
+
+.linkSecondary {
+  background-color: #333;
+  color: white;
+}
+
+.linkSecondary:hover {
+  background-color: #444;
+  transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .overlay {
+    padding: 1rem;
+  }
+
+  .modal {
+    padding: 1.5rem;
+    max-height: 90vh;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .gridTwo {
+    grid-template-columns: 1fr;
+  }
+
+  .largeValue {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .largeValue {
+    font-size: 1.25rem;
+  }
+
+  .subtitle {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .linksRow {
+    flex-direction: column;
+  }
+}

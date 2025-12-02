@@ -1,0 +1,261 @@
+.container {
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #ffffff);
+  margin: 0;
+  letter-spacing: -0.25px;
+}
+
+.liveIndicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 179, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(0, 179, 255, 0.3);
+}
+
+.liveDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-info, #00b3ff);
+  box-shadow: 0 0 8px rgba(0, 179, 255, 0.6);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.liveText {
+  font-size: 0.85rem;
+  color: var(--color-info, #00b3ff);
+  font-weight: 600;
+}
+
+/* Stats Grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.statCard {
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--border-radius-md, 8px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.25s ease;
+}
+
+.statCard:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+.statLabel {
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #a0a0a0);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+}
+
+.statValue.highlight {
+  color: var(--color-info, #00b3ff);
+}
+
+/* Prediction Card */
+.predictionCard {
+  padding: 1.5rem;
+  background: rgba(0, 179, 255, 0.05);
+  border-radius: var(--border-radius-md, 8px);
+  border: 1px solid rgba(0, 179, 255, 0.2);
+}
+
+.predictionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.predictionLabel {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-text-muted, #a0a0a0);
+  margin: 0 0 0.5rem 0;
+}
+
+.countdown {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.transactionCount {
+  text-align: right;
+}
+
+.largeValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+}
+
+/* Fees Grid */
+.feesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.feeLabel {
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #a0a0a0);
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+}
+
+.feeValue {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+}
+
+.feeValue.highlight {
+  color: var(--color-info, #00b3ff);
+}
+
+/* Error State */
+.errorState {
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.errorTitle {
+  color: var(--color-error, #ef4444);
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.errorMessage {
+  color: var(--color-text-muted, #a0a0a0);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 1.5rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .statCard {
+    padding: 1rem;
+  }
+
+  .statValue {
+    font-size: 1.3rem;
+  }
+
+  .countdown {
+    font-size: 2rem;
+  }
+
+  .largeValue {
+    font-size: 1.6rem;
+  }
+
+  .predictionHeader {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .transactionCount {
+    text-align: left;
+  }
+
+  .feesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1rem;
+  }
+
+  .liveIndicator {
+    padding: 0.4rem 0.8rem;
+  }
+
+  .liveText {
+    font-size: 0.75rem;
+  }
+
+  .countdown {
+    font-size: 1.8rem;
+  }
+
+  .largeValue {
+    font-size: 1.4rem;
+  }
+
+  .feeValue {
+    font-size: 1rem;
+  }
+}

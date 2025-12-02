@@ -1,5 +1,6 @@
 // Handles price-related logic
 import { getLatestPrice as fetchLatestPrice, getHistory as fetchHistory, insertPrice, getAllTimeHigh as fetchAllTimeHigh } from '../db/pricesDb.js';
+import { success, failure } from '../utils/responseHelpers.js';
 
 export async function getLatestPrice(req, res) {
   try {
@@ -30,11 +31,11 @@ export async function getLatestPrice(req, res) {
         if (data) return res.json({ data });
       }
     }
-    if (!data) return res.status(404).json({ error: 'No data found' });
-    res.json({ data });
+  if (!data) return res.status(404).json(failure('No data found', 404));
+  res.json(success(data));
   } catch (err) {
     console.error('Error fetching latest price:', err);
-    res.status(500).json({ error: 'Internal server error' });
+  res.status(500).json(failure('Internal server error', 500));
   }
 }
 
@@ -45,10 +46,10 @@ export function getHistory(req, res) {
     const to = req.query.to ? Number(req.query.to) : Date.now();
     const limit = req.query.limit ? Number(req.query.limit) : 500;
     const data = fetchHistory(symbol, from, to, limit);
-    res.json({ data });
+  res.json(success(data));
   } catch (err) {
     console.error('Error fetching price history:', err);
-    res.status(500).json({ error: 'Internal server error' });
+  res.status(500).json(failure('Internal server error', 500));
   }
 }
 
@@ -83,10 +84,10 @@ export async function getAllTimeHigh(req, res) {
     
     // Fallback to local database if API fails
     const data = fetchAllTimeHigh(symbol);
-    if (!data) return res.status(404).json({ error: 'No data found' });
-    res.json({ data });
+  if (!data) return res.status(404).json(failure('No data found', 404));
+  res.json(success(data));
   } catch (err) {
     console.error('Error fetching all-time high:', err);
-    res.status(500).json({ error: 'Internal server error' });
+  res.status(500).json(failure('Internal server error', 500));
   }
 }

@@ -1,0 +1,22 @@
+{
+  "trainedAt": "2025-11-28T10:35:57.932Z",
+  "trainingTime": "90.38 minutes",
+  "dataset": {
+    "train": 6079,
+    "validation": 1302,
+    "test": 1304
+  },
+  "hyperparameters": {
+    "epochs": 100,
+    "batchSize": 32,
+    "learningRate": 0.001,
+    "architecture": "Bidirectional LSTM (50+25 units)"
+  },
+  "performance": {
+    "testLoss": 0.000024352559194085188,
+    "testMAE": 0.00324478792026639,
+    "testMAPE": 118.8730697631836,
+    "directionalAccuracy": 51.30368098159509,
+    "bestValLoss": 0.000021971345631754957
+  }
+}

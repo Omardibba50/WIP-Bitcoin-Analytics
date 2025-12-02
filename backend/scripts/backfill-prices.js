@@ -72,6 +72,7 @@ async function main() {
     console.log(`[backfill] fetching ${days}d hourly for ${symbol} via CoinGecko (${id})`);
     const data = await fetchCgMarketChart(id, days, apiKey);
     const cgPrices = Array.isArray(data.prices) ? data.prices : [];
+    console.log(`[backfill] CoinGecko returned ${cgPrices.length} price points`);
     if (!cgPrices.length) throw new Error('coingecko returned no prices');
     pairs = cgPrices; // [tsMs, price]
     provider = 'coingecko';
@@ -80,6 +81,7 @@ async function main() {
     const binanceSymbol = toBinanceSymbol(symbol);
     console.log(`[backfill] fetching ${days}d hourly for ${symbol} via Binance (${binanceSymbol})`);
     const klines = await fetchBinanceKlines(binanceSymbol, startMs, now);
+    console.log(`[backfill] Binance returned ${klines.length} klines`);
     pairs = klines;
     provider = 'binance';
   }

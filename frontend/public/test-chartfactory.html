@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChartFactory Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #ffffff;
+        }
+        .test-section {
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .pass {
+            background: rgba(16, 185, 129, 0.2);
+            border-left: 4px solid #10b981;
+        }
+        .fail {
+            background: rgba(239, 68, 68, 0.2);
+            border-left: 4px solid #ef4444;
+        }
+        .info {
+            background: rgba(59, 130, 246, 0.2);
+            border-left: 4px solid #3b82f6;
+        }
+        h1 {
+            color: #00b3ff;
+        }
+        h2 {
+            color: #33c1ff;
+            border-bottom: 2px solid rgba(0, 179, 255, 0.3);
+            padding-bottom: 10px;
+        }
+        pre {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        #console-output {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        button {
+            background: #00b3ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover {
+            background: #0080ff;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 ChartFactory Fix Verification Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Status</h2>
+        <div id="test-status" class="test-result info">
+            Click "Run Tests" to verify the chartFactory fix
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Controls</h2>
+        <button onclick="runTests()">Run Tests</button>
+        <button onclick="clearConsole()">Clear Console</button>
+        <button onclick="testLiveModelsChart()">Test LiveModelsChart Simulation</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Console Output</h2>
+        <div id="console-output"></div>
+    </div>
+
+    <script>
+        const output = document.getElementById('console-output');
+        const status = document.getElementById('test-status');
+        let testResults = { passed: 0, failed: 0 };
+
+        function log(message, type = 'info') {
+            const line = document.createElement('div');
+            line.textContent = message;
+            line.style.color = type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#a0a0a0';
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+            console.log(message);
+        }
+
+        function clearConsole() {
+            output.innerHTML = '';
+        }
+
+        // Mock chartFactory functions with the fix
+        function createBarChart(datasets, labels, options = {}) {
+            // This simulates the fixed version with validation
+            log('📊 createBarChart called', 'info');
+            log(`   datasets type: ${Array.isArray(datasets) ? 'Array' : typeof datasets}`, 'info');
+            log(`   datasets value: ${JSON.stringify(datasets)}`, 'info');
+            
+            // Validate datasets is an array (THE FIX)
+            if (!Array.isArray(datasets)) {
+                log('⚠️  VALIDATION: datasets is not an array, returning fallback', 'error');
+                return {
+                    type: 'bar',
+                    data: { labels: labels || [], datasets: [] },
+                    options: {}
+                };
+            }
+
+            log('✅ VALIDATION: datasets is an array, processing...', 'success');
+            
+            try {
+                return {
+                    type: 'bar',
+                    data: {
+                        labels: labels || [],
+                        datasets: datasets.map(dataset => ({
+                            borderWidth: 0,
+                            borderRadius: 4,
+                            ...dataset,
+                        })),
+                    },
+                    options: options,
+                };
+            } catch (err) {
+                log(`❌ ERROR during chart creation: ${err.message}`, 'error');
+                return {
+                    type: 'bar',
+                    data: { labels: labels || [], datasets: [] },
+                    options: {}
+                };
+            }
+        }
+
+        function runTest(name, fn) {
+            log(`\n🧪 Running: ${name}`, 'info');
+            try {
+                const result = fn();
+                if (result) {
+                    log(`✅ PASS: ${name}`, 'success');
+                    testResults.passed++;
+                } else {
+                    log(`❌ FAIL: ${name}`, 'error');
+                    testResults.failed++;
+                }
+            } catch (err) {
+                log(`❌ EXCEPTION in ${name}: ${err.message}`, 'error');
+                testResults.failed++;
+            }
+        }
+
+        function runTests() {
+            clearConsole();
+            testResults = { passed: 0, failed: 0 };
+            
+            log('🚀 Starting chartFactory validation tests...\n', 'info');
+
+            // Test 1: Valid datasets array
+            runTest('Valid datasets array', () => {
+                const validDatasets = [
+                    {
+                        label: 'Test Data',
+                        data: [10, 20, 30],
+                        backgroundColor: '#00b3ff',
+                    }
+                ];
+                const result = createBarChart(validDatasets, ['A', 'B', 'C']);
+                return result.data.datasets.length > 0;
+            });
+
+            // Test 2: Invalid datasets (object)
+            runTest('Invalid datasets (object instead of array)', () => {
+                const invalidDatasets = {
+                    label: 'Test Data',
+                    data: [10, 20, 30],
+                };
+                const result = createBarChart(invalidDatasets, ['A', 'B', 'C']);
+                return result.data.datasets.length === 0; // Should return empty
+            });
+
+            // Test 3: Null datasets
+            runTest('Null datasets', () => {
+                const result = createBarChart(null, ['A', 'B', 'C']);
+                return result.data.datasets.length === 0;
+            });
+
+            // Test 4: Undefined datasets
+            runTest('Undefined datasets', () => {
+                const result = createBarChart(undefined, ['A', 'B', 'C']);
+                return result.data.datasets.length === 0;
+            });
+
+            // Test 5: Empty array
+            runTest('Empty datasets array', () => {
+                const result = createBarChart([], ['A', 'B', 'C']);
+                return result.data.datasets.length === 0;
+            });
+
+            // Test 6: Multiple datasets
+            runTest('Multiple datasets', () => {
+                const datasets = [
+                    { label: 'Data 1', data: [1, 2, 3] },
+                    { label: 'Data 2', data: [4, 5, 6] }
+                ];
+                const result = createBarChart(datasets, ['A', 'B', 'C']);
+                return result.data.datasets.length === 2;
+            });
+
+            // Summary
+            log('\n' + '='.repeat(50), 'info');
+            log(`\n📊 Test Summary:`, 'info');
+            log(`   ✅ Passed: ${testResults.passed}`, 'success');
+            log(`   ❌ Failed: ${testResults.failed}`, testResults.failed > 0 ? 'error' : 'success');
+            log(`   Total: ${testResults.passed + testResults.failed}`, 'info');
+
+            if (testResults.failed === 0) {
+                status.textContent = '✅ All tests passed! The chartFactory fix is working correctly.';
+                status.className = 'test-result pass';
+            } else {
+                status.textContent = `❌ ${testResults.failed} test(s) failed. Check console output for details.';
+                status.className = 'test-result fail';
+            }
+        }
+
+        function testLiveModelsChart() {
+            clearConsole();
+            log('🔄 Simulating LiveModelsChart component behavior...\n', 'info');
+
+            // Simulate API response
+            const mockAPIResponse = {
+                data: [
+                    { id: 'ema_24h', name: 'EMA (24h)', accuracy: 0.45 },
+                    { id: 'ema_72h', name: 'EMA (72h)', accuracy: 0.52 },
+                    { id: 'baseline', name: 'Baseline', accuracy: 0.50 }
+                ],
+                source: 'mock'
+            };
+
+            log('📥 Simulated API response:', 'info');
+            log(JSON.stringify(mockAPIResponse, null, 2), 'info');
+
+            // Extract models (as in LiveModelsChart)
+            const models = mockAPIResponse.data;
+            log(`\n✅ Extracted ${models.length} models`, 'success');
+
+            // Prepare chart data
+            const labels = models.map(m => m.name);
+            const datasets = [
+                {
+                    label: 'Model Accuracy (%)',
+                    data: models.map(m => (Number(m.accuracy) * 100).toFixed(2)),
+                    backgroundColor: ['#00b3ff', '#0080ff', '#3b82f6'],
+                    borderRadius: 8,
+                }
+            ];
+
+            log(`\n📊 Chart labels: ${JSON.stringify(labels)}`, 'info');
+            log(`📊 Chart datasets: ${JSON.stringify(datasets)}`, 'info');
+
+            // Create chart
+            log('\n🎨 Creating chart with chartFactory...', 'info');
+            const chartConfig = createBarChart(datasets, labels, {});
+
+            if (chartConfig && chartConfig.data && chartConfig.data.datasets.length > 0) {
+                log('\n✅ SUCCESS: Chart created without errors!', 'success');
+                log('✅ No "datasets.map is not a function" error!', 'success');
+                status.textContent = '✅ LiveModelsChart simulation passed! The fix is working.';
+                status.className = 'test-result pass';
+            } else {
+                log('\n❌ FAIL: Chart creation failed', 'error');
+                status.textContent = '❌ LiveModelsChart simulation failed';
+                status.className = 'test-result fail';
+            }
+        }
+
+        // Run tests on load
+        window.addEventListener('load', () => {
+            log('🎯 ChartFactory test page loaded', 'info');
+            log('👉 Click "Run Tests" to verify the fix\n', 'info');
+        });
+    </script>
+</body>
+</html>

@@ -1,154 +1,192 @@
-import React, { useEffect, useState } from "react";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-import { Bar } from "react-chartjs-2";
+import React from 'react';
+import { Bar } from 'react-chartjs-2';
+import { useDataFetch } from '../hooks/useDataFetch';
+import { aiApi } from '../services/apiClient';
+import { createBarChart } from '../utils/chartFactory';
+import { Card, LoadingSpinner } from '../components/ui';
+import { colors } from '../styles/designSystem';
+import styles from './LiveModelsChart.module.css';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-
+/**
+ * Live Models Chart Component - Refactored
+ * Displays real-time model accuracy and details
+ * 
+ * Features:
+ * - useDataFetch with 60s polling
+ * - chartFactory for consistent styling
+ * - CSS modules
+ */
 export default function LiveModelsChart() {
-  const [models, setModels] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-
-  async function fetchModels() {
-    try {
-      setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/models/live`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      setModels(json.data || []);
-      setError(null);
-    } catch (err) {
-      console.error(" Error fetching live model data:", err);
-      setError("Failed to load live data");
-    } finally {
-      setLoading(false);
+  // Fetch models with 60s polling
+  const { data: response, loading, error, refetch } = useDataFetch(
+    () => aiApi.getModelsLive(),
+    {
+      interval: 60 * 1000, // 60 seconds
+      priority: 'secondary'
     }
+  );
+
+  // Extract models from response with comprehensive validation
+  let models = null;
+  
+  if (response) {
+    console.log('LiveModelsChart - Response received:', response);
+    
+    if (Array.isArray(response.data)) {
+      models = response.data;
+    } else if (response.data && typeof response.data === 'object') {
+      models = [response.data];
+    } else if (Array.isArray(response)) {
+      models = response;
+    }
+    
+    console.log('LiveModelsChart - Processed models:', models);
   }
 
-  useEffect(() => {
-    fetchModels();
-    const interval = setInterval(fetchModels, 60000);
-    return () => clearInterval(interval);
-  }, []);
-
-  if (loading) {
-    return <p style={{ color: "#888" }}>Loading live data...</p>;
+  if (loading && (!models || models.length === 0)) {
+    return (
+      <Card className={styles.container}>
+        <div className={styles.loadingContainer}>
+          <LoadingSpinner size="medium" />
+          <p>Loading live model data...</p>
+        </div>
+      </Card>
+    );
   }
 
-  if (error) {
-    return <p style={{ color: "#ff4d4d" }}>{error}</p>;
+  if (error && (!models || models.length === 0)) {
+    return (
+      <Card className={styles.container}>
+        <div className={styles.errorContainer}>
+          <p>Error: {error.message}</p>
+          <button onClick={refetch} className={styles.retryButton}>
+            Retry
+          </button>
+        </div>
+      </Card>
+    );
   }
 
-  if (!models.length) {
-    return <p style={{ color: "#888" }}>No model data available.</p>;
+  if (!models || models.length === 0) {
+    return (
+      <Card className={styles.container}>
+        <div className={styles.noData}>
+          <p>No model data available</p>
+        </div>
+      </Card>
+    );
   }
 
-  const labels = models.map((m) => m.name);
-  const accuracies = models.map((m) => (Number(m.accuracy) * 100).toFixed(2));
-
-
-  const chartData = {
-    labels,
-    datasets: [
-      {
-        label: "Model Accuracy (%)",
-        data: accuracies,
-        backgroundColor: ["#00b3ff", "#ffaa00", "#ff4d4d"],
-        borderRadius: 8,
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { labels: { color: "#fff" } },
-      title: { display: true, text: "Live Model Accuracy", color: "#fff" },
+  // Prepare chart data
+  console.log('LiveModelsChart - Creating chart with models:', models);
+  
+  const labels = models.map(m => m?.name || 'Unknown');
+  const datasets = [
+    {
+      label: 'Model Accuracy (%)',
+      data: models.map(m => {
+        const accuracy = Number(m?.accuracy || 0);
+        return isNaN(accuracy) ? 0 : (accuracy * 100).toFixed(2);
+      }),
+      backgroundColor: [colors.primary || '#00b3ff', colors.primaryDark || '#0080ff', colors.info || '#3b82f6'],
+      borderRadius: 8,
     },
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 100,
-        ticks: { color: "#fff" },
-        grid: { color: "rgba(255,255,255,0.1)" },
+  ];
+
+  console.log('LiveModelsChart - Chart labels:', labels);
+  console.log('LiveModelsChart - Chart datasets:', datasets);
+
+  // Validate chart data before creating chart
+  if (!Array.isArray(datasets) || !Array.isArray(labels)) {
+    console.error('LiveModelsChart - Invalid chart data:', { datasets, labels });
+    return (
+      <Card className={styles.container}>
+        <div className={styles.errorContainer}>
+          <p>Invalid chart data format</p>
+        </div>
+      </Card>
+    );
+  }
+
+  // Create chart configuration using chartFactory
+  console.log('LiveModelsChart - Calling createBarChart with:', { datasets, labels });
+  
+  let chartConfig;
+  try {
+    chartConfig = createBarChart(datasets, labels, {
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          title: {
+            display: true,
+            text: 'Accuracy (%)',
+          },
+        },
       },
-      x: {
-        ticks: { color: "#fff" },
-        grid: { color: "rgba(255,255,255,0.1)" },
-      },
-    },
-  };
+    });
+    console.log('LiveModelsChart - Chart config created:', chartConfig);
+  } catch (err) {
+    console.error('LiveModelsChart - Error creating chart:', err);
+    return (
+      <Card className={styles.container}>
+        <div className={styles.errorContainer}>
+          <p>Error creating chart: {err.message}</p>
+        </div>
+      </Card>
+    );
+  }
+
+  if (!chartConfig || !chartConfig.data) {
+    console.error('LiveModelsChart - Invalid chart config:', chartConfig);
+    return (
+      <Card className={styles.container}>
+        <div className={styles.errorContainer}>
+          <p>Chart configuration is invalid</p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
-  <div style={{ color: "#fff" }}>
-    {/* Chart Section */}
-    <div style={{ height: "350px", width: "100%", marginBottom: "1.5rem" }}>
-      <Bar data={chartData} options={options} />
-    </div>
+    <Card className={styles.container}>
+      {/* Chart Section */}
+      <div className={styles.chartContainer}>
+        <Bar data={chartConfig.data} options={chartConfig.options} />
+      </div>
 
-    {/* Details Table */}
-    <div
-      style={{
-        overflowX: "auto",
-        background: "rgba(30,30,40,0.6)",
-        padding: "1rem",
-        borderRadius: "8px",
-        border: "1px solid rgba(255,255,255,0.1)",
-      }}
-    >
-      <h4 style={{ marginBottom: "0.75rem", color: "#00b3ff" }}>
-        Model Details (Live)
-      </h4>
-      <table
-        style={{
-          width: "100%",
-          borderCollapse: "collapse",
-          fontSize: "0.9rem",
-        }}
-      >
-        <thead>
-          <tr style={{ textAlign: "left", borderBottom: "1px solid rgba(255,255,255,0.2)" }}>
-            <th style={{ padding: "0.5rem" }}>ID</th>
-            <th style={{ padding: "0.5rem" }}>Name</th>
-            <th style={{ padding: "0.5rem" }}>Description</th>
-            <th style={{ padding: "0.5rem" }}>Accuracy (%)</th>
-            <th style={{ padding: "0.5rem" }}>Updated At</th>
-          </tr>
-        </thead>
-        <tbody>
-          {models.map((m) => (
-            <tr
-              key={m.id}
-              style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}
-            >
-              <td style={{ padding: "0.5rem" }}>{m.id}</td>
-              <td style={{ padding: "0.5rem" }}>{m.name}</td>
-              <td style={{ padding: "0.5rem", maxWidth: "300px" }}>
-                {m.description}
-              </td>
-              <td style={{ padding: "0.5rem" }}>
-                {(Number(m.accuracy) * 100).toFixed(2)}%
-              </td>
-              <td style={{ padding: "0.5rem" }}>
-                {new Date(m.updated_at).toLocaleTimeString()}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </div>
-);
-
+      {/* Details Table */}
+      <div className={styles.tableContainer}>
+        <h4 className={styles.tableTitle}>Model Details (Live)</h4>
+        <div className={styles.tableWrapper}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Accuracy (%)</th>
+                <th>Updated At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {models.map((m) => (
+                <tr key={m.id}>
+                  <td>{m.id}</td>
+                  <td className={styles.nameCell}>{m.name}</td>
+                  <td className={styles.descCell}>{m.description}</td>
+                  <td className={styles.accuracyCell}>
+                    {(Number(m.accuracy) * 100).toFixed(2)}%
+                  </td>
+                  <td className={styles.timeCell}>
+                    {new Date(m.updated_at).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </Card>
+  );
 }

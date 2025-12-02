@@ -1,7 +1,18 @@
 import React from 'react';
-import { formatCurrency, formatPercentage, formatDate } from '../utils/formatters';
+import { useDataFetch } from '../hooks/useDataFetch';
+import { aiApi } from '../services/apiClient';
+import { formatCurrency, formatDate } from '../utils/formatters';
+import styles from './PriceCards.module.css';
 
 function PriceCards({ priceSummary, allTimeHigh, predictions, models }) {
+  const { data: aiPrediction } = useDataFetch(
+    () => aiApi.getLatestPrediction(),
+    {
+      interval: 300000, // 5 minutes
+      priority: 'critical'
+    }
+  );
+
   const get24hChangeDisplay = () => {
     if (!priceSummary || priceSummary.change24hPct == null) {
       return { value: '—', isNegative: false };
@@ -15,7 +26,34 @@ function PriceCards({ priceSummary, allTimeHigh, predictions, models }) {
     };
   };
 
+  const getATHDetails = () => {
+    if (!allTimeHigh || !priceSummary) {
+      return {
+        price: '—',
+        decline: '—',
+        date: '—'
+      };
+    }
+    
+    // Calculate decline from ATH
+    const declinePercent = priceSummary.currentPrice && allTimeHigh.price > 0 
+      ? ((allTimeHigh.price - priceSummary.currentPrice) / allTimeHigh.price * 100).toFixed(2)
+      : '—';
+    
+    return {
+      price: formatCurrency(allTimeHigh.price),
+      decline: declinePercent !== '—' ? `-${declinePercent}%` : '—',
+      date: formatDate(allTimeHigh.ts)
+    };
+  };
+
   const getPredictedPrice = () => {
+    if (aiPrediction?.prediction?.predicted_price) {
+      return formatCurrency(aiPrediction.prediction.predicted_price, { 
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2 
+      });
+    }
     if (!predictions || predictions.length === 0) return '—';
     const latestPrediction = predictions[predictions.length - 1];
     return formatCurrency(latestPrediction.predicted_price, { 
@@ -23,6 +61,8 @@ function PriceCards({ priceSummary, allTimeHigh, predictions, models }) {
       maximumFractionDigits: 0 
     });
   };
+
+  const athDetails = getATHDetails();
 
   const change24h = get24hChangeDisplay();
 
@@ -56,61 +96,34 @@ function PriceCards({ priceSummary, allTimeHigh, predictions, models }) {
     },
     {
       title: 'ALL-TIME HIGH',
-      value: allTimeHigh ? formatCurrency(allTimeHigh.price) : '—',
-      type: 'accent'
-    },
-    {
-      title: 'ATH DATE',
-      value: allTimeHigh ? formatDate(allTimeHigh.ts) : '—',
-      type: 'info'
+      value: athDetails.price,
+      subtitle: `Decline from ATH: ${athDetails.decline}`,
+      type: 'accent',
+      customContent: (
+        <div className={styles.athDetails}>
+          <div className={styles.athItem}>
+            <span className={styles.athLabel}>ATH Date:</span>
+            <span className={styles.athValue}>{athDetails.date}</span>
+          </div>
+        </div>
+      )
     },
   ];
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-      gap: '1rem',
-      marginBottom: '2rem'
-    }}>
+    <div className={styles.grid}>
       {tiles.map((tile, idx) => (
-        <div
-          key={idx}
-          style={{
-            background: '#ffffff',
-            backdropFilter: 'blur(10px)',
-            border: '2px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '12px',
-            padding: '1.5rem',
-            transition: 'all 0.3s ease',
-            cursor: 'default'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.borderColor = 'rgba(0, 179, 255, 0.5)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-          }}
-        >
-          <div style={{
-            fontSize: '0.75rem',
-            fontWeight: '600',
-            color: '#000000',
-            marginBottom: '0.75rem',
-            letterSpacing: '0.5px'
-          }}>
-            {tile.title}
-          </div>
-          <div style={{
-            fontSize: '1.5rem',
-            fontWeight: '700',
-            color: tile.type === 'negative' ? '#ff6b6b' : 
-                              tile.type === 'positive' ? '#4ade80' :'#000000'
-          }}>
-            {tile.value}
-          </div>
+        <div key={idx} className={`${styles.card} ${styles[tile.type]}`}>
+          <div className={styles.title}>{tile.title}</div>
+          <div className={styles.value}>{tile.value}</div>
+          {tile.subtitle && (
+            <div className={styles.subtitle}>{tile.subtitle}</div>
+          )}
+          {tile.customContent && (
+            <div className={styles.customContentContainer}>
+              {tile.customContent}
+            </div>
+          )}
         </div>
       ))}
     </div>

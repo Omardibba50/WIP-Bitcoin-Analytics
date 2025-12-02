@@ -4,7 +4,8 @@ import fetch from "node-fetch";
 
 const router = express.Router();
 
-router.get("/models/live", async (_req, res) => {
+// GET /api/models/live - the base path is already /api/models/live from server.js
+router.get("/", async (_req, res) => {
   // Create an AbortController to implement timeout
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000); // 8 seconds timeout

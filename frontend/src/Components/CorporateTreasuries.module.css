@@ -1,0 +1,289 @@
+.container {
+  margin-bottom: 2rem;
+}
+
+.header {
+  color: var(--color-text-primary, #f8fafc);
+  margin: 0 0 1rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.headerContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  color: var(--color-text-primary, #f8fafc);
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.subtitle {
+  color: var(--color-text-secondary, #94a3b8);
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.statusIndicator {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary, #94a3b8);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.statusDot.live {
+  background-color: var(--color-success, #10b981);
+}
+
+.statusDot.loading {
+  background-color: var(--color-warning, #f59e0b);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Charts */
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.chartCard {
+  padding: 1.5rem;
+}
+
+.chartTitle {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  color: var(--color-text-primary, #f8fafc);
+  font-weight: 600;
+}
+
+.chartContainer {
+  height: 400px;
+}
+
+/* Table */
+.tableCard {
+  overflow: hidden;
+  padding: 0;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 50px 2fr 1fr 1fr 1fr 100px;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background-color: var(--color-bg-secondary, #1e293b);
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary, #94a3b8);
+  border-bottom: 1px solid var(--color-border, #334155);
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 50px 2fr 1fr 1fr 1fr 100px;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tableRow.withBorder {
+  border-bottom: 1px solid var(--color-border, #334155);
+}
+
+.tableRow:hover {
+  background-color: var(--color-bg-secondary, #1e293b);
+  transform: translateX(2px);
+}
+
+.rank {
+  color: var(--color-text-muted, #64748b);
+}
+
+.company {
+  font-weight: bold;
+  color: var(--color-text-primary, #f8fafc);
+}
+
+.holdings,
+.value,
+.percentage {
+  font-family: 'Courier New', monospace;
+  color: var(--color-text-primary, #f8fafc);
+}
+
+.country {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary, #94a3b8);
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.paginationButton {
+  padding: 6px 12px;
+  background-color: var(--color-accent, #f7931a);
+  color: var(--color-text-primary, #f8fafc);
+  border: none;
+  border-radius: var(--border-radius-md, 8px);
+  cursor: pointer;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background-color: #ff9b2d;
+  transform: translateY(-1px);
+}
+
+.paginationButton:disabled {
+  background-color: var(--color-text-muted, #64748b);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.paginationInfo {
+  color: var(--color-text-primary, #f8fafc);
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+/* Loading/Error States */
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 2rem;
+}
+
+.error {
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-error, #ef4444);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--color-error, #ef4444);
+  border-radius: var(--border-radius-md, 8px);
+}
+
+.error p {
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .chartContainer {
+    height: 300px;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 40px 2fr 1fr 1fr 100px;
+    gap: 0.75rem;
+  }
+
+  /* Hide percentage column on tablets */
+  .tableHeader div:nth-child(5),
+  .tableRow .percentage {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .headerContainer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .chartCard {
+    padding: 1rem;
+  }
+
+  .chartTitle {
+    font-size: 0.9rem;
+  }
+
+  .chartContainer {
+    height: 250px;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 35px 2fr 1fr;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  /* Show only rank, company, and holdings on mobile */
+  .tableHeader div:nth-child(n+4),
+  .tableRow .value,
+  .tableRow .percentage,
+  .tableRow .country {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1rem;
+  }
+
+  .subtitle {
+    font-size: 0.75rem;
+  }
+
+  .chartContainer {
+    height: 200px;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 30px 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  /* Show only rank and company on very small screens */
+  .tableHeader div:nth-child(n+3),
+  .tableRow .holdings {
+    display: none;
+  }
+}

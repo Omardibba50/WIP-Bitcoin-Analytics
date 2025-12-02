@@ -1,5 +1,6 @@
 import { getLatestBlocks, getBlockByHeight, getBlockStats, insertBlock } from '../db/blocksDb.js';
 import { fetchLatestBlocks, fetchBlockByHeight } from '../services/blockchainService.js';
+import { success, failure } from '../utils/responseHelpers.js';
 
 export async function getLatest(req, res) {
   try {
@@ -32,10 +33,10 @@ export async function getLatest(req, res) {
       blocks = freshBlocks;
     }
     
-    res.json({ data: blocks });
+  res.json(success(blocks));
   } catch (error) {
     console.error('Error in getLatest:', error);
-    res.status(500).json({ error: 'Failed to fetch blocks' });
+  res.status(500).json(failure('Failed to fetch blocks', 500));
   }
 }
 
@@ -61,22 +62,21 @@ export async function getByHeight(req, res) {
     }
     
     if (!block) {
-      return res.status(404).json({ error: 'Block not found' });
+      return res.status(404).json(failure('Block not found', 404));
     }
-    
-    res.json({ data: block });
+    res.json(success(block));
   } catch (error) {
     console.error('Error in getByHeight:', error);
-    res.status(500).json({ error: 'Failed to fetch block' });
+    res.status(500).json(failure('Failed to fetch block', 500));
   }
 }
 
 export function getStats(req, res) {
   try {
     const stats = getBlockStats();
-    res.json({ data: stats });
+  res.json(success(stats));
   } catch (error) {
     console.error('Error in getStats:', error);
-    res.status(500).json({ error: 'Failed to fetch stats' });
+  res.status(500).json(failure('Failed to fetch stats', 500));
   }
 }

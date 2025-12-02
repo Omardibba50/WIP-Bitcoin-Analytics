@@ -9,22 +9,28 @@ export async function getPriceSummary(req, res) {
     // Fetch fresh data if no data or stale (older than 2 minutes)
     const isStale = !latest || (now - latest.ts) > 2 * 60 * 1000;
     
-    if (isStale) {
-      try {
-        const id = symbol === 'BTC' ? 'bitcoin' : symbol.toLowerCase();
-        const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(id)}&vs_currencies=usd&include_24hr_change=true`;
-        const resp = await fetch(url);
-        if (resp.ok) {
-          const json = await resp.json();
-          const price = json?.[id]?.usd ?? null;
-          if (price != null) {
-            try { insertPrice(symbol, price, now, 'coingecko'); } catch (_) {}
-            latest = { symbol, source: 'coingecko', price, ts: now };
-          }
+    let volume24h = null;
+    let marketCap = null;
+    
+    // Always fetch volume and market cap from CoinGecko (lightweight call)
+    try {
+      const id = symbol === 'BTC' ? 'bitcoin' : symbol.toLowerCase();
+      const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(id)}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true`;
+      const resp = await fetch(url);
+      if (resp.ok) {
+        const json = await resp.json();
+        const price = json?.[id]?.usd ?? null;
+        volume24h = json?.[id]?.usd_24h_vol ?? null;
+        marketCap = json?.[id]?.usd_market_cap ?? null;
+        
+        // Only update price if stale
+        if (isStale && price != null) {
+          try { insertPrice(symbol, price, now, 'coingecko'); } catch (_) {}
+          latest = { symbol, source: 'coingecko', price, ts: now };
         }
-      } catch (err) {
-        console.error('Failed to fetch fresh price:', err);
       }
+    } catch (err) {
+      console.error('Failed to fetch market data:', err);
     }
 
     if (!latest) {
@@ -72,7 +78,9 @@ export async function getPriceSummary(req, res) {
         ts: latest.ts,
         lastClose,
         change24hAbs,
-        change24hPct
+        change24hPct,
+        volume24h,
+        marketCap
       }
     });
   } catch (err) {

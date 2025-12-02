@@ -21,13 +21,19 @@ import proxyRoutes from "./app/routes/proxyRoutes.js";                 // will n
 import miningRoutes from "./app/routes/miningRoutes.js";
 import mempoolRoutes from "./app/routes/mempoolRoutes.js";
 import pricePerformanceRoutes from "./app/routes/pricePerformanceRoutes.js";   // ✅ now used
+import aiRoutes from "./app/routes/aiRoutes.js";                               // ✅ AI prediction routes
+import dashboardRoutes from "./app/routes/dashboardRoutes.js";                 // ✅ Dashboard aggregate endpoint
+import { fetchCachedCoinGecko } from "./app/utils/coingeckoCache.js";
 
 // Background services
 import { startBlockPolling } from "./app/services/blockPoller.js";
 import { startTreasuryUpdater } from "./app/services/treasuryUpdater.js";
+import { initializeLightningService, initLightningTable } from "./app/services/lightningService.js";
 import { initializeHistoricalData } from "./app/services/priceHistoryFetcher.js";
 import { initializeHashrateHistory, startHashratePolling } from "./app/services/hashratePoller.js";
 import { initializeDifficultyHistory, startDifficultyPolling } from "./app/services/difficultyPoller.js";
+import { startPricePolling } from "./app/services/pricePoller.js";
+import { startAIPredictionPolling } from "./app/services/aiPredictionPoller.js";   // ✅ AI predictions
 
 // Candlestick backfill script
 import { createOhlcvTable, updateOhlcvData } from "./scripts/backfillCoindesk.js";
@@ -49,8 +55,12 @@ initializeHashrateHistory();
 initializeDifficultyHistory();
 startBlockPolling();
 startTreasuryUpdater();
+initLightningTable(); // Initialize Lightning Network database table
+initializeLightningService(); // Start Lightning Network data fetching
 startHashratePolling();
 startDifficultyPolling();
+startPricePolling(); // ✅ Auto-update BTC prices every 5 minutes
+startAIPredictionPolling(); // ✅ Generate AI predictions every hour
 
 // Start periodic OHLCV updates (every 5 minutes)
 updateOhlcvData();
@@ -68,6 +78,7 @@ app.get("/api", (req, res) => {
       modelsLive: "/api/models/live",
       pricePerformance: "/api/performance",
       predictions: "/api/predictions",
+      ai: "/api/ai/*",
       treasuries: "/api/treasuries",
       metrics: "/api/metrics",
       blocks: "/api/blocks",
@@ -92,8 +103,9 @@ app.get("/api/health", (req, res) => {
 app.use("/api/prices", priceRoutes);
 app.use("/api/CoinDeskprices", CoinDeskpricesRouter);
 
-// Price Performance (fixes /api/prices/performance 404)
+// Price Performance routes (mount at both /api/performance and /api/price-performance)
 app.use("/api/performance", pricePerformanceRoutes);
+app.use("/api/price-performance", pricePerformanceRoutes);
 
 // Models
 app.use("/api/models", modelRoutes);
@@ -103,6 +115,11 @@ app.use("/api/models/live", modelLiveRoutes);
 
 // Predictions
 app.use("/api/predictions", predictionRoutes);
+
+// AI Predictions (LSTM model)
+app.use("/api/ai/predictions", aiRoutes);
+app.use("/api/ai/model", aiRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Blocks
 app.use("/api/blocks", blockRoutes);
@@ -121,6 +138,9 @@ app.use("/api/mining", miningRoutes);
 
 // Mempool
 app.use("/api/mempool", mempoolRoutes);
+
+// Dashboard aggregate endpoint (high performance, single request)
+app.use("/api/dashboard", dashboardRoutes);
 
 // Proxy API routes (now correctly mounted as /api/proxy/...)
 app.use("/api/proxy", proxyRoutes);

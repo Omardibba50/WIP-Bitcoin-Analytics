@@ -1,7 +1,18 @@
 import React, { useState } from 'react';
 import { Line } from 'react-chartjs-2';
-import { formatPriceHistoryForChart, chartOptions } from '../utils/chartUtils';
+import { createLineChart, formatPriceHistoryForChart } from '../utils/chartFactory';
+import { Card, LoadingSpinner } from '../components/ui';
+import { colors } from '../styles/designSystem';
+import styles from './PriceChart.module.css';
 
+/**
+ * Price Chart Component - Refactored
+ * Displays price history with time range selector
+ * 
+ * @param {Array} priceHistory - Price data array
+ * @param {boolean} loading - Loading state
+ * @param {Function} onTimeRangeChange - Callback for time range changes
+ */
 function PriceChart({ priceHistory, loading, onTimeRangeChange }) {
   const [timeRange, setTimeRange] = useState('30d');
   
@@ -11,26 +22,6 @@ function PriceChart({ priceHistory, loading, onTimeRangeChange }) {
       onTimeRangeChange(range);
     }
   };
-  
-  const chartData = formatPriceHistoryForChart(priceHistory);
-
-  if (loading) {
-    return (
-      <div style={{
-        background: '#ffffff',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        borderRadius: '12px',
-        padding: '1.5rem',
-        height: '400px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{ color: '#000000' }}>Loading chart...</div>
-      </div>
-    );
-  }
 
   const timeRanges = [
     { label: '7D', value: '7d', days: 7 },
@@ -40,65 +31,71 @@ function PriceChart({ priceHistory, loading, onTimeRangeChange }) {
     { label: 'ALL', value: 'all', days: null }
   ];
 
+  // Format chart data using chartFactory
+  const { labels, datasets } = formatPriceHistoryForChart(priceHistory || []);
+  
+  // Create chart configuration
+  const chartConfig = createLineChart(datasets, labels, {
+    plugins: {
+      title: {
+        display: false,
+      },
+      legend: {
+        display: true,
+        position: 'top',
+      },
+    },
+    scales: {
+      y: {
+        title: {
+          display: true,
+          text: 'Price (USD)',
+        },
+      },
+    },
+  });
+
+  if (loading) {
+    return (
+      <Card className={styles.container}>
+        <div className={styles.loadingContainer}>
+          <LoadingSpinner size="medium" />
+          <p>Loading price chart...</p>
+        </div>
+      </Card>
+    );
+  }
+
   return (
-    <div style={{
-      background: '#ffffff',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid #ffffff',
-      borderRadius: '12px',
-      padding: '1.5rem',
-      marginBottom: '2rem'
-    }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '1rem'
-      }}>
-        <h3 style={{
-          fontSize: '1.25rem',
-          fontWeight: '600',
-          color: '#000000',
-          margin: 0
-        }}>
-          Price History
-        </h3>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+    <Card className={styles.container}>
+      <div className={styles.header}>
+        <h3 className={styles.title}>Price History</h3>
+        <div className={styles.timeRangeButtons}>
           {timeRanges.map(range => (
             <button
               key={range.value}
               onClick={() => handleTimeRangeChange(range.value)}
-              style={{
-                padding: '0.4rem 0.8rem',
-                background: timeRange === range.value ? '#00b3ff' : 'rgba(255, 255, 255, 0.1)',
-                color: timeRange === range.value ? '#000' : '#fff',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '0.85rem',
-                fontWeight: '600',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                if (timeRange !== range.value) {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (timeRange !== range.value) {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                }
-              }}
+              className={`${styles.timeRangeButton} ${
+                timeRange === range.value ? styles.timeRangeButtonActive : ''
+              }`}
+              aria-pressed={timeRange === range.value}
             >
               {range.label}
             </button>
           ))}
         </div>
       </div>
-      <div style={{ height: '400px' }}>
-        <Line data={chartData} options={chartOptions.line} />
+      
+      <div className={styles.chartContainer}>
+        {datasets && datasets.length > 0 && datasets[0].data.length > 0 ? (
+          <Line data={chartConfig.data} options={chartConfig.options} />
+        ) : (
+          <div className={styles.noData}>
+            <p>No price data available</p>
+          </div>
+        )}
       </div>
-    </div>
+    </Card>
   );
 }
 

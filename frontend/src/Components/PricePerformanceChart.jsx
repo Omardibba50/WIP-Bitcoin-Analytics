@@ -1,67 +1,71 @@
-import React, { useEffect, useState } from "react";
-import { Bar } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
+import React from 'react';
+import { Bar } from 'react-chartjs-2';
+import { useDataFetch } from '../hooks/useDataFetch';
+import { priceApi } from '../services/apiClient';
+import { Card } from '../components/ui';
+import { LoadingSpinner } from '../components/ui';
+import { createBarChart } from '../utils/chartFactory';
+import styles from './PricePerformanceChart.module.css';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+export default function PricePerformanceChart() {
+  const { data, loading, error } = useDataFetch(
+    () => priceApi.getPerformance(),
+    {
+      pollInterval: 300000, // 5 minutes
+      cacheKey: 'price-performance'
+    }
+  );
 
-export default function PricePerformanceChart({ API_BASE_URL }) {
-  const [data, setData] = useState(null);
+  // Loading state
+  if (loading && !data) {
+    return (
+      <Card className={styles.container}>
+        <LoadingSpinner />
+      </Card>
+    );
+  }
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/prices/performance`);
-        const json = await res.json();
-        setData(json);
-      } catch (err) {
-        console.error("Failed to fetch performance:", err);
+  // Error state
+  if (error && !data) {
+    return (
+      <Card className={styles.container}>
+        <div className={styles.error}>
+          <p>Error loading price performance data</p>
+        </div>
+      </Card>
+    );
+  }
+
+  if (!data || !data.performance) return null;
+
+  // Prepare chart data
+  const labels = data.performance.map(p => p.interval.toUpperCase());
+  const chartConfig = createBarChart(
+    [{
+      label: 'Change (%)',
+      data: data.performance.map(p => p.changePct),
+      backgroundColor: data.performance.map(p => 
+        p.changePct >= 0 ? 'rgba(74,222,128,0.6)' : 'rgba(255,107,107,0.6)'
+      ),
+    }],
+    labels,
+    {
+      plugins: {
+        legend: {
+          display: false
+        }
       }
     }
-    fetchData();
-  }, [API_BASE_URL]);
-
-  if (!data) return <p style={{ color: "#888" }}>Loading...</p>;
-
-  const chartData = {
-    labels: data.performance.map((p) => p.interval.toUpperCase()),
-    datasets: [
-      {
-        label: "Change (%)",
-        data: data.performance.map((p) => p.changePct),
-        backgroundColor: data.performance.map((p) =>
-          p.changePct >= 0 ? "rgba(74,222,128,0.6)" : "rgba(255,107,107,0.6)"
-        ),
-        borderColor: data.performance.map((p) =>
-          p.changePct >= 0 ? "#4ade80" : "#ff6b6b"
-        ),
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    plugins: { legend: { display: false } },
-    scales: {
-      x: { ticks: { color: "#ccc" } },
-      y: { ticks: { color: "#ccc" } },
-    },
-  };
+  );
 
   return (
-    <div style={{ height: "300px" }}>
-      <h3 style={{ color: "#00b3ff", marginBottom: "0.5rem" }}>
-        Price Performance ({data.source})
+    <Card className={styles.container}>
+      <h3 className={styles.title}>
+        Price Performance {data.source && `(${data.source})`}
       </h3>
-      <Bar data={chartData} options={options} />
-    </div>
+      <div className={styles.chartContainer}>
+        <Bar data={chartConfig.data} options={chartConfig.options} />
+      </div>
+    </Card>
   );
 }

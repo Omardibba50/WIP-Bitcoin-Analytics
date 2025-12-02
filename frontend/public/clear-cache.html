@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Cache & Redirect</title>
+    <script>
+        // Clear all caches
+        if ('caches' in window) {
+            caches.keys().then(names => {
+                names.forEach(name => caches.delete(name));
+            });
+        }
+        
+        // Clear localStorage
+        localStorage.clear();
+        
+        // Clear sessionStorage
+        sessionStorage.clear();
+        
+        // Redirect to home with cache-busting parameter
+        setTimeout(() => {
+            window.location.href = '/?nocache=' + Date.now();
+        }, 500);
+    </script>
+</head>
+<body>
+    <h1>Clearing cache...</h1>
+    <p>Redirecting in a moment...</p>
+</body>
+</html>
