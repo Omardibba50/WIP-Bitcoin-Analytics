@@ -35,8 +35,8 @@ import { initializeDifficultyHistory, startDifficultyPolling } from "./app/servi
 import { startPricePolling } from "./app/services/pricePoller.js";
 import { startAIPredictionPolling } from "./app/services/aiPredictionPoller.js";   // ✅ AI predictions
 
-// Candlestick backfill script
-import { createOhlcvTable, updateOhlcvData } from "./scripts/backfillCoindesk.js";
+// Candlestick backfill script (optional - won't crash server if missing)
+// import { createOhlcvTable, updateOhlcvData } from "./scripts/backfillCoindesk.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -47,7 +47,7 @@ app.use(express.json());
 
 // Initialize DB
 initDb();
-createOhlcvTable();
+// createOhlcvTable(); // Disabled to prevent crashes
 
 // Background processes
 initializeHistoricalData();
@@ -62,9 +62,9 @@ startDifficultyPolling();
 startPricePolling(); // ✅ Auto-update BTC prices every 5 minutes
 startAIPredictionPolling(); // ✅ Generate AI predictions every hour
 
-// Start periodic OHLCV updates (every 5 minutes)
-updateOhlcvData();
-setInterval(updateOhlcvData, 5 * 60 * 1000);
+// Start periodic OHLCV updates (every 5 minutes) - Disabled to prevent crashes
+// updateOhlcvData();
+// setInterval(updateOhlcvData, 5 * 60 * 1000);
 
 // Default API info
 app.get("/api", (req, res) => {
