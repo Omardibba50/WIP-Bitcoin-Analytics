@@ -6,7 +6,6 @@ buildCommand = "npm install"
 startCommand = "npm start"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
-healthcheckPath = "/api/health"
 
 # Tell Railway to build from the backend directory
 [build.nixpacks]
