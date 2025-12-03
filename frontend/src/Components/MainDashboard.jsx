@@ -11,6 +11,8 @@ import CorporateTreasuries from './CorporateTreasuries';
 import BitcoinMetrics from './BitcoinMetrics';
 import DataTabs from './DataTabs';
 import MiningEconomics from './MiningEconomics';
+import BTCGoldChart from './BTCGoldChart';
+import TransactionVolumeChart from './TransactionVolumeChart';
 import { LoadingSpinner, Card } from '../components/ui';
 import styles from './MainDashboard.module.css';
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -170,6 +172,15 @@ const MainDashboard = () => {
 
               <div className={styles.aiPredictionChart}>
                 <AIPredictionChart prediction={aiPrediction} />
+              </div>
+            </section>
+
+            {/* Comparison Charts - BTC vs Gold & Transaction Volume */}
+            <section id="comparisons" className={styles.section}>
+              <h2 className={styles.sectionTitle}>Market Comparisons</h2>
+              <div className={styles.chartsGridTwo}>
+                <BTCGoldChart />
+                <TransactionVolumeChart />
               </div>
             </section>
 

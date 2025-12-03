@@ -140,6 +140,13 @@
     gap: var(--spacing-2xl);
 }
 
+.chartsGridTwo {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-2xl);
+    margin-bottom: var(--spacing-2xl);
+}
+
 .tilesGrid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -280,6 +287,10 @@
         grid-template-columns: 1fr;
     }
 
+    .chartsGridTwo {
+        grid-template-columns: 1fr;
+    }
+
     .chartsGridMain {
         grid-template-columns: 1fr;
     }
@@ -299,6 +310,7 @@
     }
 
     .chartsGrid,
+    .chartsGridTwo,
     .chartsGridMain {
         grid-template-columns: 1fr;
         gap: var(--spacing-lg);

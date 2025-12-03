@@ -130,6 +130,7 @@ export const API_ENDPOINTS = {
     HASHRATE_HISTORY: '/metrics/hashrate/history',
     DIFFICULTY_HISTORY: '/metrics/difficulty/history',
     CORRELATIONS: '/metrics/correlations',
+    GOLD: '/metrics/gold',
   // Aggregated metrics endpoint
   ALL: '/metrics/all',
   },

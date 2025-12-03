@@ -591,6 +591,7 @@ export const metricsApi = {
     return apiClient.get(`${API_ENDPOINTS.METRICS.DIFFICULTY_HISTORY}${qs ? `?${qs}` : ''}`, { cacheTTL: 300000 });
   },
   getCorrelations: () => apiClient.get(API_ENDPOINTS.METRICS.CORRELATIONS, { cacheTTL: 300000 }),
+  getGoldMetrics: () => apiClient.get(API_ENDPOINTS.METRICS.GOLD, { cacheTTL: 300000 }),
   getStockToFlowData: (days = 365) => {
     return apiClient.get(`/metrics/stock-to-flow?days=${days}`, { cacheTTL: 300000 });
   },
