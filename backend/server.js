@@ -49,18 +49,18 @@ app.use(express.json());
 initDb();
 // createOhlcvTable(); // Disabled to prevent crashes
 
-// Background processes
-initializeHistoricalData();
-initializeHashrateHistory();
-initializeDifficultyHistory();
-startBlockPolling();
-startTreasuryUpdater();
-initLightningTable(); // Initialize Lightning Network database table
-initializeLightningService(); // Start Lightning Network data fetching
-startHashratePolling();
-startDifficultyPolling();
-startPricePolling(); // ✅ Auto-update BTC prices every 5 minutes
-startAIPredictionPolling(); // ✅ Generate AI predictions every hour
+// Background processes - temporarily disabled for faster startup
+// initializeHistoricalData();
+// initializeHashrateHistory();
+// initializeDifficultyHistory();
+// startBlockPolling();
+// startTreasuryUpdater();
+// initLightningTable(); // Initialize Lightning Network database table
+// initializeLightningService(); // Start Lightning Network data fetching
+// startHashratePolling();
+// startDifficultyPolling();
+// startPricePolling(); // ✅ Auto-update BTC prices every 5 minutes
+// startAIPredictionPolling(); // ✅ Generate AI predictions every hour
 
 // Start periodic OHLCV updates (every 5 minutes) - Disabled to prevent crashes
 // updateOhlcvData();
