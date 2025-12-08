@@ -90,6 +90,16 @@ app.get("/api", (req, res) => {
   });
 });
 
+// Root route for Railway deployment health check
+app.get("/", (req, res) => {
+  res.status(200).json({ 
+    ok: true, 
+    service: "bitcoin-dashboard-backend",
+    message: "Backend is running",
+    health: "/api/health"
+  });
+});
+
 // Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({ ok: true, service: "bitcoin-dashboard-backend" });
