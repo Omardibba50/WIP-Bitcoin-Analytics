@@ -3,8 +3,8 @@ builder = "nixpacks"
 buildCommand = "npm install && npm run build"
 
 [deploy]
-# Railway will serve the static files using Python's built-in server
-startCommand = "sh railway-start.sh"
+# Serve the built static files directly
+startCommand = "npx serve dist -l 5000 --single"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
