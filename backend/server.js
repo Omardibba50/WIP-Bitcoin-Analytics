@@ -66,18 +66,22 @@ try {
 }
 // createOhlcvTable(); // Disabled to prevent crashes
 
-// Background processes - temporarily disabled for faster startup
-// initializeHistoricalData();
-// initializeHashrateHistory();
-// initializeDifficultyHistory();
-// startBlockPolling();
-// startTreasuryUpdater();
-// initLightningTable(); // Initialize Lightning Network database table
-// initializeLightningService(); // Start Lightning Network data fetching
-// startHashratePolling();
-// startDifficultyPolling();
-// startPricePolling(); // ✅ Auto-update BTC prices every 5 minutes
-// startAIPredictionPolling(); // ✅ Generate AI predictions every hour
+// Background processes - Production optimized intervals
+console.log('🔄 Initializing background services...');
+
+// One-time initialization (only runs if database is empty)
+initializeHistoricalData();        // Fetch historical price data
+initializeHashrateHistory();        // Fetch hashrate history
+initializeDifficultyHistory();      // Fetch difficulty history
+
+// Background pollers (production-optimized intervals)
+startBlockPolling();                // Every 5 minutes
+startHashratePolling();             // Every 2 hours
+startDifficultyPolling();           // Every 2 hours  
+startPricePolling();                // Every 15 minutes ✅ Optimized
+startAIPredictionPolling();         // Every 2 hours ✅ Optimized
+
+console.log('✅ All background services started');
 
 // Start periodic OHLCV updates (every 5 minutes) - Disabled to prevent crashes
 // updateOhlcvData();

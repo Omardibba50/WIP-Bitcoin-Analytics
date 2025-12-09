@@ -11,7 +11,7 @@ const cache = {
   hashrate: { data: null, timestamp: 0 }
 };
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes (production optimized)
 
 function isCacheValid(cacheEntry) {
   return cacheEntry.data && (Date.now() - cacheEntry.timestamp) < CACHE_DURATION;

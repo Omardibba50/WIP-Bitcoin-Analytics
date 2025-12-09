@@ -2,7 +2,7 @@
 import { insertPrice } from '../db/pricesDb.js';
 
 let pollingInterval = null;
-const POLL_INTERVAL = 5 * 60 * 1000; // Poll every 5 minutes
+const POLL_INTERVAL = 15 * 60 * 1000; // Poll every 15 minutes (production optimized)
 
 export function startPricePolling() {
   if (pollingInterval) {
@@ -10,7 +10,7 @@ export function startPricePolling() {
     return;
   }
 
-  console.log('🔄 Starting automatic BTC price polling (every 5 minutes)...');
+  console.log('🔄 Starting automatic BTC price polling (every 15 minutes)...');
   
   // Initial fetch
   pollPrice();

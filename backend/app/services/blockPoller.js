@@ -3,7 +3,7 @@ import { fetchLatestBlocks } from './blockchainService.js';
 import { insertBlock } from '../db/blocksDb.js';
 
 let pollingInterval = null;
-const POLL_INTERVAL = 60000; // Poll every 60 seconds (blocks come ~every 10 minutes)
+const POLL_INTERVAL = 5 * 60 * 1000; // Poll every 5 minutes (blocks come ~every 10 minutes, production optimized)
 
 export function startBlockPolling() {
   if (pollingInterval) {

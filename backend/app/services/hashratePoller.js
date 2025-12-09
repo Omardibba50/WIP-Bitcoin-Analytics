@@ -91,7 +91,7 @@ export async function initializeHashrateHistory() {
  * Poll for latest hashrate data
  */
 let hashratePollingInterval = null;
-const HASHRATE_POLL_INTERVAL = 60 * 60 * 1000; // Poll every 1 hour
+const HASHRATE_POLL_INTERVAL = 2 * 60 * 60 * 1000; // Poll every 2 hours (production optimized)
 
 export function startHashratePolling() {
   if (hashratePollingInterval) {

@@ -110,7 +110,7 @@ export async function initializeDifficultyHistory() {
  * Poll for latest difficulty data
  */
 let difficultyPollingInterval = null;
-const DIFFICULTY_POLL_INTERVAL = 60 * 60 * 1000; // Poll every 1 hour
+const DIFFICULTY_POLL_INTERVAL = 2 * 60 * 60 * 1000; // Poll every 2 hours (production optimized)
 
 export function startDifficultyPolling() {
   if (difficultyPollingInterval) {

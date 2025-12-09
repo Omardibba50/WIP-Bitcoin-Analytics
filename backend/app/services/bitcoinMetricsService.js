@@ -14,7 +14,7 @@ const cache = {
   treasury: { data: null, timestamp: 0 }
 };
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes (network stats change slowly)
 
 function isCacheValid(cacheEntry) {
   return cacheEntry.data && (Date.now() - cacheEntry.timestamp) < CACHE_DURATION;

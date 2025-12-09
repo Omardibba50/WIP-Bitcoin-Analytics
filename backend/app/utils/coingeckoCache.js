@@ -2,7 +2,7 @@ import fetch from "node-fetch";
 
 let cache = {};
 let lastFetch = 0;
-const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes (optimized for production)
 
 export async function fetchCachedCoinGecko(url) {
   const now = Date.now();

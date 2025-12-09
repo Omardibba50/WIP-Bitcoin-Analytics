@@ -6,7 +6,7 @@
 import { getAIPredictionService } from './aiPredictionService.js';
 import { insertPrediction } from '../db/predictionsDb.js';
 
-const POLL_INTERVAL = 60 * 60 * 1000; // 1 hour
+const POLL_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours (production optimized)
 let pollingInterval = null;
 let predictionService = null;
 
@@ -34,7 +34,7 @@ export async function startAIPredictionPolling() {
       await generateAndStorePrediction();
     }, POLL_INTERVAL);
     
-    console.log('✅ AI prediction polling started (every 1 hour)\n');
+    console.log('✅ AI prediction polling started (every 2 hours)\n');
     
   } catch (error) {
     console.error('❌ Failed to start AI prediction polling:', error.message);
