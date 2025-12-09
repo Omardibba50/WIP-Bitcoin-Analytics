@@ -1,10 +1,9 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm install && npm run build"
 
 [deploy]
 # Railway will serve the static files using Python's built-in server
-startCommand = "sh -c 'cd dist && python3 -m http.server 5000'"
+startCommand = "sh railway-start.sh"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
@@ -12,7 +11,3 @@ restartPolicyMaxRetries = 10
 [deploy.environment]
 VITE_API_BASE_URL = "https://wip-bitcoin-analytics-production.up.railway.app/api"
 VITE_ENV = "production"
-
-# Tell Railway to build from the frontend directory
-[build.nixpacks]
-root = "frontend"
