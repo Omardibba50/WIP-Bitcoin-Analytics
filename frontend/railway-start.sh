@@ -7,8 +7,8 @@ if [ -d "dist" ]; then
     echo "✅ dist directory found"
     echo "📂 Contents of dist:"
     ls -la dist
-    echo "🚀 Starting HTTP server..."
-    python3 -m http.server 5000 --directory dist
+    echo "🚀 Starting HTTP server with serve..."
+    npx serve dist -l 5000 --single
 else
     echo "❌ dist directory not found!"
     echo "Current directory contents:"
