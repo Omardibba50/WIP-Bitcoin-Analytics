@@ -21,10 +21,29 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1200px) {
+  .networkStatsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .price {
+    font-size: 2.5rem;
+  }
+}
+
 @media (max-width: 1024px) {
   .heroGrid {
     grid-template-columns: 1fr;
+    grid-template-areas: 
+      "price"
+      "prediction"
+      "ath"
+      "network";
     gap: var(--spacing-lg);
+  }
+  
+  .networkStatsGrid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -37,7 +56,29 @@
   .predictionCard,
   .athCard,
   .networkStatsCard {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
+    min-height: unset;
+  }
+  
+  .price {
+    font-size: 2rem;
+  }
+  
+  .predValue {
+    font-size: var(--font-size-xl);
+  }
+  
+  .networkStatsGrid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+  
+  .networkStatItem {
+    padding: var(--spacing-md);
+  }
+  
+  .priceStatItem {
+    padding: var(--spacing-sm);
   }
 }
 
@@ -489,22 +530,54 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   .currentPriceCard,
-  .predictionCard {
-    padding: var(--spacing-xl);
+  .predictionCard,
+  .athCard,
+  .networkStatsCard {
+    padding: var(--spacing-sm);
   }
 
   .price {
-    font-size: 2.5rem;
+    font-size: 1.75rem;
+  }
+  
+  .cardHeader {
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+  }
+  
+  .cardTitle {
+    font-size: var(--font-size-base);
   }
 
   .predictionRow {
     grid-template-columns: 1fr;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
   }
 
   .predValue {
-    font-size: var(--font-size-xl);
+    font-size: var(--font-size-lg);
+  }
+  
+  .predLabel {
+    font-size: 10px;
+  }
+  
+  .networkStatLabel,
+  .networkStatValue {
+    font-size: 11px;
+  }
+  
+  .networkStatSubtitle {
+    font-size: 9px;
+  }
+  
+  .athPrice {
+    font-size: var(--font-size-base);
+  }
+  
+  .confidenceSection {
+    padding: var(--spacing-sm);
   }
 }

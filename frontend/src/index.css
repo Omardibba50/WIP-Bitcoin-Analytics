@@ -2,11 +2,30 @@
    Global Base Styles
    ===================================================== */
 
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  width: 100%;
+}
+
 #root {
   margin: 0;
   padding: 0;
   min-height: 100vh;
   background: var(--color-background-primary);
+  width: 100%;
+  overflow-x: hidden;
 }
 
 /* ===== Typography Hierarchy ===== */
@@ -70,4 +89,39 @@ img {
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+/* ===== Touch Optimization ===== */
+button, a {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  touch-action: manipulation;
+}
+
+/* ===== Responsive Utilities ===== */
+@media (max-width: 768px) {
+  h1 {
+    font-size: var(--font-size-2xl);
+  }
+  
+  h2 {
+    font-size: var(--font-size-xl);
+  }
+  
+  h3 {
+    font-size: var(--font-size-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: var(--font-size-xl);
+  }
+  
+  h2 {
+    font-size: var(--font-size-lg);
+  }
+  
+  h3 {
+    font-size: var(--font-size-base);
+  }
 }

@@ -19,6 +19,7 @@
     max-width: var(--container-max-width);
     margin: 0 auto;
     width: 100%;
+    overflow-x: hidden;
 }
 
 /* ===== Section Styles ===== */
@@ -136,7 +137,7 @@
 /* ===== Grid Layouts ===== */
 .chartsGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: var(--spacing-2xl);
 }
 
@@ -282,23 +283,36 @@
 }
 
 /* ===== Responsive Design ===== */
+@media (max-width: 1200px) {
+    .chartsGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 1024px) {
     .chartsGrid {
         grid-template-columns: 1fr;
+        gap: var(--spacing-xl);
     }
 
     .chartsGridTwo {
         grid-template-columns: 1fr;
+        gap: var(--spacing-xl);
     }
 
     .chartsGridMain {
         grid-template-columns: 1fr;
+        gap: var(--spacing-xl);
+    }
+    
+    .tilesGrid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     }
 }
 
 @media (max-width: 768px) {
     .mainContent {
-        padding: var(--spacing-xl) var(--spacing-lg);
+        padding: var(--spacing-xl) var(--spacing-md);
     }
 
     .section {
@@ -307,35 +321,89 @@
 
     .sectionTitle {
         font-size: var(--font-size-xl);
+        margin-bottom: var(--spacing-lg);
     }
 
     .chartsGrid,
     .chartsGridTwo,
     .chartsGridMain {
         grid-template-columns: 1fr;
-        gap: var(--spacing-lg);
+        gap: var(--spacing-md);
     }
 
     .chartContainer {
         height: 300px;
+        min-height: 300px;
+    }
+    
+    .chartCard {
+        padding: var(--spacing-md);
+    }
+    
+    .chartCardTitle {
+        font-size: var(--font-size-base);
+        margin-bottom: var(--spacing-md);
     }
 
     .tilesGrid {
         grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    .controlRow {
+        flex-direction: column;
+        gap: var(--spacing-md);
+        padding: var(--spacing-md);
+    }
+    
+    .controlInput,
+    .symbolInput,
+    .datepickerWrapper {
+        width: 100%;
+        max-width: 100%;
     }
 }
 
 @media (max-width: 480px) {
-    .logoSection {
-        font-size: var(--font-size-lg);
+    .mainContent {
+        padding: var(--spacing-lg) var(--spacing-sm);
+    }
+    
+    .heroSection {
+        margin-bottom: var(--spacing-xl);
     }
 
     .sectionTitle {
-        font-size: var(--font-size-xl);
+        font-size: var(--font-size-lg);
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .section {
+        margin-bottom: var(--spacing-xl);
     }
 
-    .navButton {
+    .chartsGrid,
+    .chartsGridTwo,
+    .chartsGridMain {
+        gap: var(--spacing-sm);
+    }
+    
+    .chartContainer {
+        height: 250px;
+        min-height: 250px;
+    }
+    
+    .chartCard {
+        padding: var(--spacing-sm);
+    }
+    
+    .chartCardTitle {
         font-size: var(--font-size-sm);
-        padding: var(--spacing-xs) var(--spacing-sm);
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .footer {
+        padding: var(--spacing-lg) var(--spacing-sm);
+        font-size: 11px;
     }
 }
