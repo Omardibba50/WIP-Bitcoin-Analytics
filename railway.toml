@@ -1,3 +1,5 @@
+# Monorepo configuration for Bitcoin Analytics
+# Backend service configuration
 [build]
 builder = "nixpacks"
 buildCommand = "npm install"

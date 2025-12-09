@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "serve": "serve dist -p 5000"
   },
   "dependencies": {
     "@shadcn/ui": "^0.0.4",
@@ -30,6 +31,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "serve": "^14.2.4",
     "vite": "^6.3.3",
     "vite-plugin-pwa": "^1.0.0"
   }
