@@ -1,9 +1,15 @@
 // server.js
+console.log('🚀 Starting Bitcoin Dashboard Backend...');
+console.log('📍 Node version:', process.version);
+console.log('📍 Platform:', process.platform, process.arch);
+
 import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
 import cors from "cors";
+
+console.log('✅ Core modules loaded');
 
 import { initDb } from "./db.js";
 import CoinDeskpricesRouter from "./routes/prices.js";
@@ -35,18 +41,29 @@ import { initializeDifficultyHistory, startDifficultyPolling } from "./app/servi
 import { startPricePolling } from "./app/services/pricePoller.js";
 import { startAIPredictionPolling } from "./app/services/aiPredictionPoller.js";   // ✅ AI predictions
 
+console.log('✅ All routes and services imported');
+
 // Candlestick backfill script (optional - won't crash server if missing)
 // import { createOhlcvTable, updateOhlcvData } from "./scripts/backfillCoindesk.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+console.log(`🔧 Configured to run on port: ${PORT}`);
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Initialize DB
-initDb();
+// Initialize DB with error handling
+try {
+  console.log('🔧 Initializing database...');
+  initDb();
+  console.log('✅ Database initialized successfully');
+} catch (error) {
+  console.error('❌ Database initialization failed:', error);
+  // Don't exit, just continue - the server can still start for health checks
+}
 // createOhlcvTable(); // Disabled to prevent crashes
 
 // Background processes - temporarily disabled for faster startup
@@ -200,7 +217,30 @@ app.get('/api/proxy/hashrate', async (req, res) => {
   }
 });
 
-// Start server
-app.listen(PORT, '0.0.0.0', () => {
+// Start server with error handling
+console.log(`🔧 Attempting to start server on 0.0.0.0:${PORT}...`);
+
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Backend running on http://0.0.0.0:${PORT}`);
+  console.log('✅ Health check available at: http://0.0.0.0:' + PORT + '/');
+  console.log('✅ API available at: http://0.0.0.0:' + PORT + '/api');
+});
+
+server.on('error', (error) => {
+  console.error('❌ Server error:', error);
+  if (error.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use`);
+  }
+  process.exit(1);
+});
+
+// Handle uncaught errors
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });
