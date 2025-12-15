@@ -118,8 +118,8 @@ const BitcoinDominanceChart = () => {
         {
           label: 'Bitcoin Dominance (%)',
           data: data.historicalData.map(item => item.dominance),
-          borderColor: colors.warning,
-          backgroundColor: colors.warning + '20',
+          borderColor: colors.primary,
+          backgroundColor: colors.primary + '20',
           tension: 0.4,
           pointRadius: 2,
           pointHoverRadius: 6,

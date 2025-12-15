@@ -168,8 +168,8 @@ function StockFlowChart({
       {
         label: 'Stock-to-Flow Ratio',
         data: visibleSeries.map(row => row.stockToFlow),
-        borderColor: colors.primary,
-        backgroundColor: `${colors.primary}20`,
+        borderColor: colors.warning,
+        backgroundColor: `${colors.warning}20`,
         tension: 0.3,
         pointRadius: 0,
         spanGaps: true,
@@ -177,8 +177,8 @@ function StockFlowChart({
       {
         label: `${symbol} Price (USD, log)`,
         data: visibleSeries.map(row => row.priceUSD || null),
-        borderColor: colors.success,
-        backgroundColor: `${colors.success}20`,
+        borderColor: colors.primary,
+        backgroundColor: `${colors.primary}20`,
         tension: 0.3,
         pointRadius: 0,
         spanGaps: true,

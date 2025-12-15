@@ -64,8 +64,8 @@ function AIPredictionChart() {
     {
       label: 'Actual Price',
       data: actualData,
-      borderColor: '#00b3ff',
-      backgroundColor: 'rgba(0, 179, 255, 0.05)',
+      borderColor: '#22D3EE',
+      backgroundColor: 'rgba(34, 211, 238, 0.05)',
       fill: true,
       tension: 0.4,
       pointRadius: 0
@@ -73,11 +73,11 @@ function AIPredictionChart() {
     {
       label: 'AI Predictions',
       data: predictionData,
-      borderColor: '#00b3ff',
-      backgroundColor: 'rgba(0, 179, 255, 0.1)',
+      borderColor: '#F59E0B',
+      backgroundColor: 'rgba(245, 158, 11, 0.1)',
       borderDash: [5, 5],
       pointRadius: 4,
-      pointBackgroundColor: '#00b3ff',
+      pointBackgroundColor: '#F59E0B',
       tension: 0.1
     }
   ];

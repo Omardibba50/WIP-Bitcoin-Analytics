@@ -173,8 +173,8 @@ const TransactionVolumeChart = () => {
         {
           label: 'Daily Transactions',
           data: mergedData.map(item => item.txCount),
-          borderColor: colors.info,
-          backgroundColor: colors.info + '20',
+          borderColor: colors.success,
+          backgroundColor: colors.success + '20',
           yAxisID: 'y',
           tension: 0.4,
           pointRadius: 1,

@@ -31,8 +31,22 @@ function PriceChart({ priceHistory, loading, onTimeRangeChange }) {
     { label: 'ALL', value: 'all', days: null }
   ];
 
+  // Filter price history based on selected time range
+  const filterPriceHistory = (data, range) => {
+    if (!data || data.length === 0) return [];
+    if (range === 'all') return data;
+    
+    const rangeDays = timeRanges.find(r => r.value === range)?.days;
+    if (!rangeDays) return data;
+    
+    const cutoffTime = Date.now() - (rangeDays * 24 * 60 * 60 * 1000);
+    return data.filter(item => item.ts >= cutoffTime);
+  };
+
+  const filteredData = filterPriceHistory(priceHistory || [], timeRange);
+
   // Format chart data using chartFactory
-  const { labels, datasets } = formatPriceHistoryForChart(priceHistory || []);
+  const { labels, datasets } = formatPriceHistoryForChart(filteredData);
   
   // Create chart configuration
   const chartConfig = createLineChart(datasets, labels, {

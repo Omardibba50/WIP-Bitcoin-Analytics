@@ -78,10 +78,10 @@ const DifficultyChart = ({ data: propData }) => {
       labels,
       datasets: [
         {
-          label: 'Difficulty',
+          label: 'Mining Difficulty',
           data: sampledData.map(item => item.difficulty),
-          borderColor: colors.warning,
-          backgroundColor: colors.warning + '20',
+          borderColor: colors.info,
+          backgroundColor: colors.info + '20',
           yAxisID: 'y',
           tension: 0.4,
           pointRadius: sampledData.map((_, index) => {
