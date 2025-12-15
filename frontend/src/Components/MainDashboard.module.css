@@ -164,6 +164,16 @@
     align-items: start;
 }
 
+/* ===== Investment Tools Container ===== */
+.investmentToolsContainer {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
 .chartsGridMain > * {
     height: 100%;
     display: flex;

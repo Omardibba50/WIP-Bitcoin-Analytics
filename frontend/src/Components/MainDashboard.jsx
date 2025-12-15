@@ -13,6 +13,11 @@ import DataTabs from './DataTabs';
 import MiningEconomics from './MiningEconomics';
 import BTCGoldChart from './BTCGoldChart';
 import TransactionVolumeChart from './TransactionVolumeChart';
+import InvestmentCalculator from './InvestmentCalculator';
+import BitcoinDominanceChart from './BitcoinDominanceChart';
+import MVRVChart from './MVRVChart';
+import ExchangeReservesChart from './ExchangeReservesChart';
+import HistoricalROIHeatmap from './HistoricalROIHeatmap';
 import { LoadingSpinner, Card } from '../components/ui';
 import styles from './MainDashboard.module.css';
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -181,6 +186,27 @@ const MainDashboard = () => {
               <div className={styles.chartsGridTwo}>
                 <BTCGoldChart />
                 <TransactionVolumeChart />
+              </div>
+            </section>
+
+            {/* Investment Tools - Calculator */}
+            <section id="investment-tools" className={styles.section}>
+              <h2 className={styles.sectionTitle}>Investment Tools</h2>
+              <div className={styles.investmentToolsContainer}>
+                <InvestmentCalculator />
+              </div>
+            </section>
+
+            {/* Investment Analytics - Priority 1 Graphs */}
+            <section id="investment-analytics" className={styles.section}>
+              <h2 className={styles.sectionTitle}>Investment Analytics</h2>
+              <div className={styles.chartsGridTwo}>
+                <BitcoinDominanceChart />
+                <MVRVChart />
+              </div>
+              <div className={styles.chartsGridTwo}>
+                <ExchangeReservesChart />
+                <HistoricalROIHeatmap />
               </div>
             </section>
 

@@ -202,6 +202,208 @@ app.get('/api/proxy/gold-xauusd', async (req, res) => {
   }
 });
 
+// In-memory cache for CoinGecko data
+const coinGeckoCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Track in-flight requests to prevent duplicates
+const pendingRequests = new Map();
+
+// CoinGecko proxy endpoints for new investment analytics
+app.get('/api/proxy/coingecko/market-chart', async (req, res) => {
+  try {
+    const { id = 'bitcoin', vs_currency = 'usd', days = '30', interval = 'daily' } = req.query;
+    const cacheKey = `market-chart-${id}-${vs_currency}-${interval}`;
+    
+    // Check cache first
+    const cached = coinGeckoCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      console.log(`Returning cached data for ${cacheKey}`);
+      
+      // Slice the cached data to match requested days
+      if (cached.data.prices && cached.data.prices.length > 0) {
+        const daysNum = parseInt(days);
+        const pointsPerDay = 1; // Daily interval
+        const totalPoints = daysNum * pointsPerDay;
+        const slicedData = {
+          ...cached.data,
+          prices: cached.data.prices.slice(-totalPoints),
+          market_caps: cached.data.market_caps?.slice(-totalPoints) || [],
+          total_volumes: cached.data.total_volumes?.slice(-totalPoints) || []
+        };
+        return res.json(slicedData);
+      }
+      return res.json(cached.data);
+    }
+    
+    // Check if request is already in flight
+    if (pendingRequests.has(cacheKey)) {
+      console.log(`Request for ${cacheKey} already in flight, waiting...`);
+      try {
+        const data = await pendingRequests.get(cacheKey);
+        
+        // Slice the data to match requested days
+        if (data.prices && data.prices.length > 0) {
+          const daysNum = parseInt(days);
+          const pointsPerDay = 1;
+          const totalPoints = daysNum * pointsPerDay;
+          const slicedData = {
+            ...data,
+            prices: data.prices.slice(-totalPoints),
+            market_caps: data.market_caps?.slice(-totalPoints) || [],
+            total_volumes: data.total_volumes?.slice(-totalPoints) || []
+          };
+          return res.json(slicedData);
+        }
+        return res.json(data);
+      } catch (error) {
+        return res.status(500).json({ error: 'Failed to fetch from pending request' });
+      }
+    }
+    
+    // Create the fetch promise and store it
+    const fetchPromise = (async () => {
+      // CoinGecko free API limits to 365 days max
+      const url = `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=${vs_currency}&days=365&interval=${interval}`;
+      
+      console.log(`Fetching CoinGecko market chart: ${url}`);
+      const resp = await fetch(url);
+      console.log(`CoinGecko market chart response status: ${resp.status}`);
+      
+      if (!resp.ok) {
+        const errorText = await resp.text();
+        console.error(`CoinGecko market chart error response: ${errorText}`);
+        pendingRequests.delete(cacheKey);
+        throw new Error(`Failed to fetch market chart: ${resp.status}`);
+      }
+      
+      const data = await resp.json();
+      
+      // Cache the full 730 days data
+      coinGeckoCache.set(cacheKey, {
+        data,
+        timestamp: Date.now()
+      });
+      console.log(`Cached ${cacheKey} for 5 minutes`);
+      
+      // Remove from pending requests
+      pendingRequests.delete(cacheKey);
+      
+      return data;
+    })();
+    
+    // Store the promise
+    pendingRequests.set(cacheKey, fetchPromise);
+    
+    // Wait for the fetch to complete
+    const data = await fetchPromise;
+    
+    // Return only requested days
+    const daysNum = parseInt(days);
+    const pointsPerDay = 1;
+    const totalPoints = daysNum * pointsPerDay;
+    const slicedData = {
+      ...data,
+      prices: data.prices.slice(-totalPoints),
+      market_caps: data.market_caps?.slice(-totalPoints) || [],
+      total_volumes: data.total_volumes?.slice(-totalPoints) || []
+    };
+    
+    res.json(slicedData);
+  } catch (e) {
+    console.error('proxy coingecko market-chart error:', e);
+    res.status(500).json({ error: 'Proxy error fetching market chart' });
+  }
+});
+
+app.get('/api/proxy/coingecko/global', async (req, res) => {
+  try {
+    const cacheKey = 'global-data';
+    
+    // Check cache first
+    const cached = coinGeckoCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      console.log(`Returning cached data for ${cacheKey}`);
+      return res.json(cached.data);
+    }
+    
+    // Check if request is already in flight
+    if (pendingRequests.has(cacheKey)) {
+      console.log(`Request for ${cacheKey} already in flight, waiting...`);
+      try {
+        const data = await pendingRequests.get(cacheKey);
+        return res.json(data);
+      } catch (error) {
+        return res.status(500).json({ error: 'Failed to fetch from pending request' });
+      }
+    }
+    
+    // Create the fetch promise and store it
+    const fetchPromise = (async () => {
+      const url = 'https://api.coingecko.com/api/v3/global';
+      
+      console.log(`Fetching CoinGecko global: ${url}`);
+      const resp = await fetch(url);
+      console.log(`CoinGecko global response status: ${resp.status}`);
+      
+      if (!resp.ok) {
+        const errorText = await resp.text();
+        console.error(`CoinGecko global error response: ${errorText}`);
+        pendingRequests.delete(cacheKey);
+        throw new Error(`Failed to fetch global data: ${resp.status}`);
+      }
+      
+      const data = await resp.json();
+      
+      // Cache the data
+      coinGeckoCache.set(cacheKey, {
+        data,
+        timestamp: Date.now()
+      });
+      console.log(`Cached ${cacheKey} for 5 minutes`);
+      
+      // Remove from pending requests
+      pendingRequests.delete(cacheKey);
+      
+      return data;
+    })();
+    
+    // Store the promise
+    pendingRequests.set(cacheKey, fetchPromise);
+    
+    // Wait for the fetch to complete
+    const data = await fetchPromise;
+    
+    res.json(data);
+  } catch (e) {
+    console.error('proxy coingecko global error:', e);
+    res.status(500).json({ error: 'Proxy error fetching global data' });
+  }
+});
+
+app.get('/api/proxy/blockchain/total-bitcoins', async (req, res) => {
+  try {
+    const { timespan = '365days', format = 'json' } = req.query;
+    const url = `https://api.blockchain.info/charts/total-bitcoins?timespan=${encodeURIComponent(timespan)}&format=${format}&cors=true`;
+    
+    const resp = await fetch(url);
+    if (!resp.ok) return res.status(resp.status).json({ error: 'Failed to fetch total bitcoins' });
+    
+    const text = await resp.text();
+    
+    // Check if we got HTML instead of JSON
+    if (text.includes('<!DOCTYPE') || text.includes('<html>')) {
+      throw new Error('API returned HTML instead of JSON');
+    }
+    
+    const data = JSON.parse(text);
+    res.json(data);
+  } catch (e) {
+    console.error('proxy blockchain total-bitcoins error:', e);
+    res.status(500).json({ error: 'Proxy error fetching total bitcoins' });
+  }
+});
+
 // Real-time hashrate
 app.get('/api/proxy/hashrate', async (req, res) => {
   try {

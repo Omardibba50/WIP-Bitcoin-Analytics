@@ -271,3 +271,18 @@ export const aiApi = {
 
 // Export error class for error handling in components
 export { ApiError };
+
+// Default export for backwards compatibility
+const api = {
+  get: async (url) => {
+    return fetchWithErrorHandling(`${API_BASE_URL}${url}`);
+  },
+  post: async (url, data) => {
+    return fetchWithErrorHandling(`${API_BASE_URL}${url}`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+};
+
+export default api;

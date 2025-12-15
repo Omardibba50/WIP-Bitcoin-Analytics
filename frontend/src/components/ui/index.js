@@ -1,7 +1,5 @@
-/**
- * UI Components - Barrel Export
- */
-
-export { default as Card } from './Card';
-export { default as Skeleton, SkeletonCard, SkeletonChart, SkeletonTable } from './Skeleton';
-export { default as LoadingSpinner, BitcoinSpinner, DotsLoader, ProgressBar } from './LoadingSpinner';
+// UI Components Barrel Export
+export { Card, CardHeader, CardContent, CardTitle } from './card';
+export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs';
+export { LoadingSpinner } from './LoadingSpinner';
+export { Skeleton } from './Skeleton';
