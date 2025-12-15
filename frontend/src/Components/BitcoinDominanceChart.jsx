@@ -43,7 +43,7 @@ const BitcoinDominanceChart = () => {
         
         // Fetch Bitcoin market chart (includes dominance data)
         const btcResponse = await fetch(
-          `http://localhost:5000/api/proxy/coingecko/market-chart?id=bitcoin&vs_currency=usd&days=${days}&interval=daily`
+          `${API_CONFIG.BASE_URL}/proxy/coingecko/market-chart?id=bitcoin&vs_currency=usd&days=${days}&interval=daily`
         );
         
         if (!btcResponse.ok) {

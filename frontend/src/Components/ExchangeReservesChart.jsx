@@ -43,7 +43,7 @@ const ExchangeReservesChart = () => {
         
         // Fetch exchange reserves from Blockchain.info
         const response = await fetch(
-          `http://localhost:5000/api/proxy/blockchain/total-bitcoins?timespan=${timespan}&format=json`
+          `${API_CONFIG.BASE_URL}/proxy/blockchain/total-bitcoins?timespan=${timespan}&format=json`
         );
         
         if (!response.ok) {
