@@ -26,7 +26,7 @@ const HistoricalROIHeatmap = () => {
       try {
         // Fetch 1 year of daily price data (CoinGecko free API limit)
         const response = await fetch(
-          'http://localhost:5000/api/proxy/coingecko/market-chart?id=bitcoin&vs_currency=usd&days=365&interval=daily'
+          `${API_CONFIG.BASE_URL}/proxy/coingecko/market-chart?id=bitcoin&vs_currency=usd&days=365&interval=daily`
         );
         
         if (!response.ok) {

@@ -3,6 +3,7 @@ import { Line } from 'react-chartjs-2';
 import { Card, LoadingSpinner } from '../components/ui';
 import { createLineChart, formatLargeNumber } from '../utils/chartFactory';
 import { colors } from '../styles/designSystem';
+import { API_CONFIG } from '../constants/config';
 import styles from './ExchangeReservesChart.module.css';
 
 /**

@@ -3,6 +3,7 @@ import { Line } from 'react-chartjs-2';
 import { Card, LoadingSpinner } from '../components/ui';
 import { createLineChart } from '../utils/chartFactory';
 import { colors } from '../styles/designSystem';
+import { API_CONFIG } from '../constants/config';
 import styles from './MVRVChart.module.css';
 
 /**
@@ -44,7 +45,7 @@ const MVRVChart = () => {
         
         // Fetch Bitcoin price history
         const priceResponse = await fetch(
-          `http://localhost:5000/api/proxy/coingecko/market-chart?id=bitcoin&vs_currency=usd&days=${days}&interval=daily`
+          `${API_CONFIG.BASE_URL}/proxy/coingecko/market-chart?id=bitcoin&vs_currency=usd&days=${days}&interval=daily`
         );
         
         if (!priceResponse.ok) {

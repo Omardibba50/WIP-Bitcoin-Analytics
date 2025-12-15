@@ -3,6 +3,7 @@ import { Line } from 'react-chartjs-2';
 import { Card, LoadingSpinner } from '../components/ui';
 import { createLineChart, formatLargeNumber } from '../utils/chartFactory';
 import { colors } from '../styles/designSystem';
+import { API_CONFIG } from '../constants/config';
 import styles from './BitcoinDominanceChart.module.css';
 
 /**
@@ -53,7 +54,7 @@ const BitcoinDominanceChart = () => {
         
         // Fetch global market data for total market cap
         const globalResponse = await fetch(
-          'http://localhost:5000/api/proxy/coingecko/global'
+          `${API_CONFIG.BASE_URL}/proxy/coingecko/global`
         );
         
         if (!globalResponse.ok) {
