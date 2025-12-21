@@ -155,7 +155,7 @@ class DataOrchestrator {
 
     try {
       const results = await Promise.allSettled([
-        priceApi.getHistory({ limit: 100 }).then(res => ({ priceHistory: res?.data || res })),
+        priceApi.getHistory({ limit: 3000 }).then(res => ({ priceHistory: res?.data || res })),
         priceApi.getAllTimeHigh().then(data => ({ allTimeHigh: data })),
         aiApi.getModels().then(data => ({ models: data })),
         treasuryApi.getList().then(data => ({ treasuries: data })),
@@ -340,7 +340,7 @@ class DataOrchestrator {
       aiPrediction: () => aiApi.getPredictions().then(res => res?.prediction || res),
       
       // Secondary
-      priceHistory: () => priceApi.getHistory({ limit: 100 }).then(res => res?.data || res),
+      priceHistory: () => priceApi.getHistory({ limit: 3000 }).then(res => res?.data || res),
       allTimeHigh: () => priceApi.getAllTimeHigh(),
       models: () => aiApi.getModels(),
       treasuries: () => treasuryApi.getList(),

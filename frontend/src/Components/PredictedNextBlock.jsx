@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDataFetch } from '../hooks/useDataFetch';
 import { mempoolApi } from '../services/apiClient';
-import { Card } from '../components/ui';
-import { LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner } from './ui';
 import styles from './PredictedNextBlock.module.css';
 
 function PredictedNextBlock() {

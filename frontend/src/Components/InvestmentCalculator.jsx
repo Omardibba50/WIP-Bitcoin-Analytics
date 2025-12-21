@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import api from '../services/api';
+import { apiClient } from '../services/apiClient';
 import './InvestmentCalculator.css';
 
 const InvestmentCalculator = () => {
@@ -110,7 +110,7 @@ const InvestmentCalculator = () => {
         let yearlyAverage = cacheRef.current[year];
         if (yearlyAverage == null) {
           try {
-            const resp = await api.get(`/api/prices/year-avg/${year}`);
+            const resp = await apiClient.get(`/prices/year-avg/${year}`);
             yearlyAverage = Number(resp?.data?.averagePrice ?? resp?.averagePrice);
           } catch (_) {}
           if (yearlyAverage == null || !Number.isFinite(yearlyAverage)) {

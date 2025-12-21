@@ -1,25 +1,40 @@
 import React, { useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import { createLineChart, formatPriceHistoryForChart } from '../utils/chartFactory';
-import { Card, LoadingSpinner } from './ui';
+import ChartWrapper from './ChartWrapper';
 import { colors } from '../styles/designSystem';
 import styles from './PriceChart.module.css';
 
 /**
- * Price Chart Component - Refactored
+ * Price Chart Component - Updated with ChartWrapper
  * Displays price history with time range selector
  * 
  * @param {Array} priceHistory - Price data array
  * @param {boolean} loading - Loading state
  * @param {Function} onTimeRangeChange - Callback for time range changes
+ * @param {Function} onRefresh - Manual refresh callback
  */
-function PriceChart({ priceHistory, loading, onTimeRangeChange }) {
-  const [timeRange, setTimeRange] = useState('all');
+function PriceChart({ priceHistory, loading: externalLoading, onTimeRangeChange, onRefresh }) {
+  const [timeRange, setTimeRange] = useState('30d');
+  const [internalLoading, setInternalLoading] = useState(false);
+  
+  const loading = externalLoading || internalLoading;
   
   const handleTimeRangeChange = (range) => {
     setTimeRange(range);
     if (onTimeRangeChange) {
       onTimeRangeChange(range);
+    }
+  };
+
+  const handleRefresh = async () => {
+    if (onRefresh) {
+      setInternalLoading(true);
+      try {
+        await onRefresh();
+      } finally {
+        setInternalLoading(false);
+      }
     }
   };
 
@@ -40,14 +55,7 @@ function PriceChart({ priceHistory, loading, onTimeRangeChange }) {
     if (!rangeDays) return data;
     
     const cutoffTime = Date.now() - (rangeDays * 24 * 60 * 60 * 1000);
-    const filtered = data.filter(item => {
-      const timestamp = item.ts || item.timestamp;
-      return timestamp && timestamp >= cutoffTime;
-    });
-    
-    console.log(`📊 ${range.toUpperCase()} filter: ${filtered.length}/${data.length} records`);
-    
-    return filtered;
+    return data.filter(item => item.ts >= cutoffTime);
   };
 
   const filteredData = filterPriceHistory(priceHistory || [], timeRange);
@@ -76,51 +84,44 @@ function PriceChart({ priceHistory, loading, onTimeRangeChange }) {
     },
   });
 
-  if (loading) {
-    return (
-      <Card className={styles.container}>
-        <div className={styles.loadingContainer}>
-          <LoadingSpinner size="medium" />
-          <p>Loading price chart...</p>
-        </div>
-      </Card>
-    );
-  }
+  // Time range selector component
+  const timeRangeComponent = (
+    <div className={styles.timeRangeButtons}>
+      {timeRanges.map(range => (
+        <button
+          key={range.value}
+          onClick={() => handleTimeRangeChange(range.value)}
+          className={`${styles.timeRangeButton} ${
+            timeRange === range.value ? styles.timeRangeButtonActive : ''
+          }`}
+          aria-pressed={timeRange === range.value}
+        >
+          {range.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  // Main chart content
+  const chartContent = datasets && datasets.length > 0 && datasets[0].data.length > 0 ? (
+    <Line data={chartConfig.data} options={chartConfig.options} />
+  ) : (
+    <div className={styles.noData}>
+      <p>No price data available</p>
+    </div>
+  );
 
   return (
-    <Card className={styles.container}>
-      <div className={styles.header}>
-        <h3 className={styles.title}>Price History</h3>
-        <div className={styles.timeRangeButtons}>
-          {timeRanges.map(range => (
-            <button
-              key={range.value}
-              onClick={() => handleTimeRangeChange(range.value)}
-              className={`${styles.timeRangeButton} ${
-                timeRange === range.value ? styles.timeRangeButtonActive : ''
-              }`}
-              aria-pressed={timeRange === range.value}
-            >
-              {range.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      
-      <div className={styles.chartContainer}>
-        {datasets && datasets.length > 0 && datasets[0].data.length > 0 ? (
-          <Line 
-            key={timeRange} 
-            data={chartConfig.data} 
-            options={chartConfig.options} 
-          />
-        ) : (
-          <div className={styles.noData}>
-            <p>No price data available for {timeRange.toUpperCase()}</p>
-          </div>
-        )}
-      </div>
-    </Card>
+    <ChartWrapper
+      title="Bitcoin Price History"
+      subtitle="Historical price data with customizable time ranges"
+      loading={loading}
+      onRefresh={handleRefresh}
+      dataSource="CoinGecko API"
+      timeRangeComponent={timeRangeComponent}
+    >
+      {chartContent}
+    </ChartWrapper>
   );
 }
 

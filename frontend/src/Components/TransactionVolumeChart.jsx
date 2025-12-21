@@ -3,7 +3,7 @@ import { Line } from 'react-chartjs-2';
 import { useDataFetch } from '../hooks/useDataFetch';
 import { priceApi } from '../services/apiClient';
 import { createLineChart, formatLargeNumber } from '../utils/chartFactory';
-import { Card, LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner, EmptyState } from './ui';
 import { colors } from '../styles/designSystem';
 import styles from './TransactionVolumeChart.module.css';
 
@@ -22,27 +22,8 @@ const TransactionVolumeChart = () => {
   const [txLoading, setTxLoading] = useState(true);
   const [txError, setTxError] = useState(null);
 
-  // Fetch BTC price history
-  const { 
-    data: priceData, 
-    loading: priceLoading, 
-    error: priceError 
-  } = useDataFetch(
-    () => {
-      const days = getDaysFromRange(timeRange);
-      const to = Date.now();
-      const from = to - (days * 24 * 60 * 60 * 1000);
-      return priceApi.getHistory({ from, to, limit: 500 });
-    },
-    {
-      interval: 5 * 60 * 1000, // 5 minutes
-      priority: 'tertiary',
-      dependencies: [timeRange],
-    }
-  );
-
-  // Fetch transaction volume data from blockchain.info
-  React.useEffect(() => {
+  // Refetch function for transaction data
+  const refetchTransactionData = React.useCallback(() => {
     async function fetchTransactionVolume() {
       setTxLoading(true);
       setTxError(null);
@@ -86,6 +67,31 @@ const TransactionVolumeChart = () => {
     fetchTransactionVolume();
   }, [timeRange]);
 
+  // Fetch BTC price history
+  const { 
+    data: priceData, 
+    loading: priceLoading, 
+    error: priceError 
+  } = useDataFetch(
+    () => {
+      const days = getDaysFromRange(timeRange);
+      const to = Date.now();
+      const from = to - (days * 24 * 60 * 60 * 1000);
+      const limit = Math.min(days * 24, 3000); // up to hourly points, cap to 3000
+      return priceApi.getHistory({ from, to, limit });
+    },
+    {
+      interval: 5 * 60 * 1000, // 5 minutes
+      priority: 'tertiary',
+      dependencies: [timeRange],
+    }
+  );
+
+  // Fetch transaction volume data from blockchain.info
+  React.useEffect(() => {
+    refetchTransactionData();
+  }, [refetchTransactionData]);
+
   const loading = txLoading || priceLoading;
   const error = txError || priceError;
 
@@ -115,7 +121,8 @@ const TransactionVolumeChart = () => {
     // Create a map of prices by timestamp (normalized to day)
     const priceByDay = new Map();
     priceHistory.forEach(p => {
-      const date = new Date(p.timestamp);
+      const ts = p.timestamp || p.ts;
+      const date = new Date(ts);
       date.setHours(0, 0, 0, 0);
       const dayKey = date.getTime();
       priceByDay.set(dayKey, p.price);
@@ -295,13 +302,16 @@ const TransactionVolumeChart = () => {
         )}
 
         {!loading && !error && (!chartData.datasets || chartData.datasets.length === 0) && (
-          <div className={styles.centerContent}>
-            <p>No data available</p>
-          </div>
+          <EmptyState 
+            message="No transaction volume data available"
+            icon="💱"
+            action={refetchTransactionData}
+            actionLabel="Refresh Data"
+          />
         )}
 
         {!loading && !error && chartData.datasets && chartData.datasets.length > 0 && (
-          <Line data={chartConfig.data} options={chartConfig.options} />
+          <Line key={timeRange} data={chartConfig.data} options={chartConfig.options} />
         )}
       </div>
     </Card>

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Bar } from 'react-chartjs-2';
-import { Card } from '../components/ui';
-import { LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner } from './ui';
 import { createBarChart } from '../utils/chartFactory';
 import { formatModelsForChart } from '../utils/chartUtils';
 import styles from './ModelChart.module.css';

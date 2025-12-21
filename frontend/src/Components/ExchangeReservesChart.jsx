@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
-import { Card, LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner } from './ui';
 import { createLineChart, formatLargeNumber } from '../utils/chartFactory';
 import { colors } from '../styles/designSystem';
 import { API_CONFIG } from '../constants/config';

@@ -18,7 +18,7 @@ import BitcoinDominanceChart from './BitcoinDominanceChart';
 import MVRVChart from './MVRVChart';
 import ExchangeReservesChart from './ExchangeReservesChart';
 import HistoricalROIHeatmap from './HistoricalROIHeatmap';
-import { LoadingSpinner, Card } from '../components/ui';
+import { LoadingSpinner, Card } from './ui';
 import styles from './MainDashboard.module.css';
 import { useDashboardData } from '../hooks/useDashboardData';
 
@@ -162,16 +162,10 @@ const MainDashboard = () => {
               <Card className={styles.chartCard}>
                 <h3 className={styles.chartCardTitle}>Bitcoin Price History</h3>
                 <div className={styles.chartContainer}>
-                  {safePriceHistory.length > 0 ? (
-                    <PriceChart
-                      priceHistory={safePriceHistory}
-                      symbol={searchTerm}
-                      startDate={startDate}
-                      endDate={endDate}
-                    />
-                  ) : (
-                    <div className={styles.emptyState}>No price history available</div>
-                  )}
+                  <PriceChart
+                    priceHistory={safePriceHistory}
+                    loading={isSecondaryLoading}
+                  />
                 </div>
               </Card>
 

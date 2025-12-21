@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useDataFetch } from '../hooks/useDataFetch';
 import { metricsApi } from '../services/apiClient';
-import { Card } from '../components/ui';
-import { LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner } from './ui';
 import styles from './BitcoinMetrics.module.css';
 
 function BitcoinMetrics() {

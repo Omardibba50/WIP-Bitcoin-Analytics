@@ -12,7 +12,7 @@ import {
   TimeScale,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import ChartWrapper from './ChartWrapper';
+import { Card, LoadingSpinner } from './ui';
 import { colors } from '../styles/designSystem';
 import styles from './StockFlowChart.module.css';
 import { metricsApi, priceApi } from '../services/apiClient';
@@ -31,7 +31,7 @@ ChartJS.register(
 );
 
 /**
- * Stock-to-Flow Chart Component - Updated with ChartWrapper
+ * Stock-to-Flow Chart Component
  * Displays Bitcoin stock-to-flow ratio alongside price history
  */
 function StockFlowChart({ 
@@ -43,7 +43,6 @@ function StockFlowChart({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [timeRange, setTimeRange] = useState('30d');
-  const [internalLoading, setInternalLoading] = useState(false);
   const chartId = useId();
 
   const DAYS_HISTORY = 1460; // 4 years of data
@@ -55,85 +54,70 @@ function StockFlowChart({
     return d.getTime();
   };
 
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Fetch stock-to-flow data using metricsApi
-      const s2fResponse = await metricsApi.getStockToFlowData(DAYS_HISTORY);
-      
-      if (!s2fResponse || !s2fResponse.data) {
-        throw new Error('Failed to fetch stock-to-flow data');
-      }
-      const s2fRaw = s2fResponse.data;
-
-      // Try to fetch price history (optional)
-      let priceRaw = [];
-      try {
-        const now = Date.now();
-        const from = now - (DAYS_HISTORY * 24 * 60 * 60 * 1000);
-        const limit = 3000; // up to ~90-120 days hourly, backend will cap appropriately
-        const priceResponse = await priceApi.getHistory({ from, to: now, limit });
-        const arr = priceResponse?.data || priceResponse;
-        if (Array.isArray(arr)) {
-          priceRaw = arr;
-        }
-      } catch (priceErr) {
-        console.warn('Price history fetch failed, showing S2F only:', priceErr);
-      }
-
-      // Map price by day
-      const priceByDay = new Map();
-      priceRaw.forEach((p) => {
-        const ts = p.timestamp || p.ts;
-        const dayKey = normalizeDay(ts);
-        const price = p.price;
-        if (!Number.isFinite(price)) return;
-        priceByDay.set(dayKey, price);
-      });
-
-      // Merge S2F and price data with forward-fill
-      let lastPrice = null;
-      const combined = s2fRaw.map((p) => {
-        const dayKey = normalizeDay(p.timestamp);
-        let price = priceByDay.get(dayKey) ?? null;
-
-        if (price != null) {
-          lastPrice = price;
-        } else if (lastPrice != null) {
-          price = lastPrice;
-        }
-
-        return {
-          date: new Date(dayKey),
-          stockToFlow: p.stockToFlow,
-          priceUSD: price,
-        };
-      });
-
-      setSeries(combined);
-    } catch (err) {
-      console.error('StockFlowChart error:', err);
-      setError(err.message || 'Failed to load stock-to-flow data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Fetch stock-to-flow data using metricsApi
+        const s2fResponse = await metricsApi.getStockToFlowData(DAYS_HISTORY);
+        
+        if (!s2fResponse || !s2fResponse.data) {
+          throw new Error('Failed to fetch stock-to-flow data');
+        }
+        const s2fRaw = s2fResponse.data;
+
+        // Try to fetch price history (optional)
+        let priceRaw = [];
+        try {
+          const priceResponse = await priceApi.getHistory({ days: DAYS_HISTORY });
+          if (priceResponse && priceResponse.data) {
+            priceRaw = priceResponse.data;
+          }
+        } catch (priceErr) {
+          console.warn('Price history fetch failed, showing S2F only:', priceErr);
+        }
+
+        // Map price by day
+        const priceByDay = new Map();
+        priceRaw.forEach((p) => {
+          const dayKey = normalizeDay(p.timestamp);
+          const price = p.price;
+          if (!Number.isFinite(price)) return;
+          priceByDay.set(dayKey, price);
+        });
+
+        // Merge S2F and price data with forward-fill
+        let lastPrice = null;
+        const combined = s2fRaw.map((p) => {
+          const dayKey = normalizeDay(p.timestamp);
+          let price = priceByDay.get(dayKey) ?? null;
+
+          if (price != null) {
+            lastPrice = price;
+          } else if (lastPrice != null) {
+            price = lastPrice;
+          }
+
+          return {
+            date: new Date(dayKey),
+            stockToFlow: p.stockToFlow,
+            priceUSD: price,
+          };
+        });
+
+        setSeries(combined);
+      } catch (err) {
+        console.error('StockFlowChart error:', err);
+        setError(err.message || 'Failed to load stock-to-flow data');
+      } finally {
+        setLoading(false);
+      }
+    }
+
     fetchData();
   }, []);
-
-  // Handle refresh
-  const handleRefresh = async () => {
-    setInternalLoading(true);
-    try {
-      await fetchData();
-    } finally {
-      setInternalLoading(false);
-    }
-  };
 
   // Handle time range selection
   const handleTimeRangeChange = (range) => {
@@ -290,45 +274,59 @@ function StockFlowChart({
     },
   };
 
-  // Time range selector component
-  const timeRangeComponent = (
-    <div className={styles.timeRangeButtons}>
-      {timeRanges.map(range => (
-        <button
-          key={range.value}
-          onClick={() => handleTimeRangeChange(range.value)}
-          className={`${styles.timeRangeButton} ${
-            timeRange === range.value ? styles.timeRangeButtonActive : ''
-          }`}
-          aria-pressed={timeRange === range.value}
-        >
-          {range.label}
-        </button>
-      ))}
-    </div>
-  );
+  if (loading) {
+    return (
+      <Card className={styles.container}>
+        <div className={styles.loadingContainer}>
+          <LoadingSpinner size="medium" />
+          <p>Loading stock-to-flow data...</p>
+        </div>
+      </Card>
+    );
+  }
 
-  // Main chart content
-  const chartContent = series.length > 0 ? (
-    <Line key={timeRange} data={chartConfig.data} options={chartConfig.options} />
-  ) : (
-    <div className={styles.noData}>
-      <p>No stock-to-flow data available</p>
-    </div>
-  );
+  if (error) {
+    return (
+      <Card className={styles.container}>
+        <div className={styles.errorContainer}>
+          <p>{error}</p>
+        </div>
+      </Card>
+    );
+  }
+
+  const { datasets } = prepareChartData();
 
   return (
-    <ChartWrapper
-      title="Stock-to-Flow Model"
-      subtitle="Bitcoin's scarcity indicator compared to price history"
-      loading={loading || internalLoading}
-      error={error}
-      onRefresh={handleRefresh}
-      dataSource="Blockchain Analytics API"
-      timeRangeComponent={timeRangeComponent}
-    >
-      {chartContent}
-    </ChartWrapper>
+    <Card className={styles.container}>
+      <div className={styles.header}>
+        <h3 className={styles.title}>Stock-to-Flow Model</h3>
+        <div className={styles.timeRangeButtons}>
+          {timeRanges.map(range => (
+            <button
+              key={range.value}
+              onClick={() => handleTimeRangeChange(range.value)}
+              className={`${styles.timeRangeButton} ${
+                timeRange === range.value ? styles.timeRangeButtonActive : ''
+              }`}
+              aria-pressed={timeRange === range.value}
+            >
+              {range.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      <div className={styles.chartContainer}>
+        {datasets && datasets.length > 0 && datasets[0].data.length > 0 ? (
+          <Line key={chartId} data={chartConfig.data} options={chartConfig.options} />
+        ) : (
+          <div className={styles.noData}>
+            <p>No stock-to-flow data available</p>
+          </div>
+        )}
+      </div>
+    </Card>
   );
 }
 

@@ -2,8 +2,7 @@ import React from 'react';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { useDataFetch } from '../hooks/useDataFetch';
 import { aiApi } from '../services/apiClient';
-import { Card } from '../components/ui';
-import { LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner } from './ui';
 import { createDoughnutChart, createBarChart } from '../utils/chartFactory';
 import styles from './AIModelMetrics.module.css';
 

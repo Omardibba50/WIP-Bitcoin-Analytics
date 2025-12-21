@@ -1,8 +1,7 @@
 import React from 'react';
 import { useDataFetch } from '../hooks/useDataFetch';
 import { miningApi } from '../services/apiClient';
-import { Card } from '../components/ui';
-import { LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner } from './ui';
 import styles from './MiningEconomics.module.css';
 
 function MiningEconomics() {

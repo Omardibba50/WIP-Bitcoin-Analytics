@@ -3,7 +3,7 @@ import { Line } from 'react-chartjs-2';
 import { useDataFetch } from '../hooks/useDataFetch';
 import { metricsApi, priceApi } from '../services/apiClient';
 import { createLineChart, formatLargeNumber } from '../utils/chartFactory';
-import { Card, LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner, EmptyState } from './ui';
 import { colors } from '../styles/designSystem';
 import styles from './BTCGoldChart.module.css';
 
@@ -23,13 +23,16 @@ const BTCGoldChart = () => {
   const { 
     data: btcPriceData, 
     loading: btcLoading, 
-    error: btcError 
+    error: btcError,
+    refetch: refetchBtcPrice
   } = useDataFetch(
     () => {
       const days = getDaysFromRange(timeRange);
       const to = Date.now();
       const from = to - (days * 24 * 60 * 60 * 1000);
-      return priceApi.getHistory({ from, to, limit: 500 });
+      console.log('BTCGoldChart: Fetching price data', { from, to, days });
+      const limit = Math.min(Math.ceil((to - from) / (60 * 60 * 1000)), 3000);
+      return priceApi.getHistory({ from, to, limit });
     },
     {
       interval: 5 * 60 * 1000, // 5 minutes
@@ -230,13 +233,16 @@ const BTCGoldChart = () => {
         )}
 
         {!loading && !error && (!chartData.datasets || chartData.datasets.length === 0) && (
-          <div className={styles.centerContent}>
-            <p>No data available</p>
-          </div>
+          <EmptyState 
+            message="No BTC/Gold comparison data available"
+            icon="📈"
+            action={refetchBtcPrice}
+            actionLabel="Refresh Data"
+          />
         )}
 
         {!loading && !error && chartData.datasets && chartData.datasets.length > 0 && (
-          <Line data={chartConfig.data} options={chartConfig.options} />
+          <Line key={timeRange} data={chartConfig.data} options={chartConfig.options} />
         )}
       </div>
     </Card>

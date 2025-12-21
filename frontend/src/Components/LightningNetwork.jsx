@@ -1,6 +1,5 @@
 import React from 'react';
-import { Card } from '../components/ui';
-import { LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner } from './ui';
 import { formatNumber, formatCurrency } from '../utils/formatters';
 import styles from './LightningNetwork.module.css';
 

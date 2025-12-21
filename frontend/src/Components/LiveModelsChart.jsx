@@ -3,7 +3,7 @@ import { Bar } from 'react-chartjs-2';
 import { useDataFetch } from '../hooks/useDataFetch';
 import { aiApi } from '../services/apiClient';
 import { createBarChart } from '../utils/chartFactory';
-import { Card, LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner } from './ui';
 import { colors } from '../styles/designSystem';
 import styles from './LiveModelsChart.module.css';
 

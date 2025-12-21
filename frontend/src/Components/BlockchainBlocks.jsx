@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Bar, Line } from 'react-chartjs-2';
 import { useDataFetch } from '../hooks/useDataFetch';
 import { blockApi } from '../services/apiClient';
-import { Card, LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner } from './ui';
 import { createBarChart, createLineChart } from '../utils/chartFactory';
 import BlockDetailModal from './BlockDetailModal';
 import styles from './BlockchainBlocks.module.css';

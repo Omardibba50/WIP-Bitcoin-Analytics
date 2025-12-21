@@ -2,8 +2,7 @@ import React from 'react';
 import { Bar } from 'react-chartjs-2';
 import { useDataFetch } from '../hooks/useDataFetch';
 import { priceApi } from '../services/apiClient';
-import { Card } from '../components/ui';
-import { LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner } from './ui';
 import { createBarChart } from '../utils/chartFactory';
 import styles from './PricePerformanceChart.module.css';
 

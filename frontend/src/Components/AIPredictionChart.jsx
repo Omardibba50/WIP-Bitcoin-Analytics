@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import { useDataFetch } from '../hooks/useDataFetch';
 import { aiApi, priceApi } from '../services/apiClient';
-import { Card } from '../components/ui';
-import { LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner } from './ui';
 import { createLineChart } from '../utils/chartFactory';
 import styles from './AIPredictionChart.module.css';
 
@@ -27,12 +26,15 @@ function AIPredictionChart() {
         '30d': 30 * 24 * 60 * 60 * 1000
       };
       const from = now - ranges[timeRange];
-  // Ensure API expects params object
-  return priceApi.getHistory({ symbol: 'BTC', from, to: now, limit: 500 });
+      // Request enough hourly points for the selected range, cap to 3000
+      const hours = Math.ceil((now - from) / (60 * 60 * 1000));
+      const limit = Math.min(hours, 3000);
+      return priceApi.getHistory({ symbol: 'BTC', from, to: now, limit });
     },
     {
       pollInterval: 300000,
-      cacheKey: `price-history-${timeRange}`
+      cacheKey: `price-history-${timeRange}`,
+      dependencies: [timeRange]
     }
   );
 
@@ -49,7 +51,7 @@ function AIPredictionChart() {
 
   // Prepare chart data
   const actualData = (Array.isArray(priceHistory) ? priceHistory : []).map(p => ({
-    x: new Date(p.ts),
+    x: new Date(p.ts || p.timestamp),
     y: p.price
   }));
 
@@ -92,7 +94,20 @@ function AIPredictionChart() {
           time: {
             unit: timeRange === '24h' ? 'hour' : 'day',
           },
+          title: {
+            display: true,
+            text: 'Time'
+          }
         },
+        y: {
+          title: {
+            display: true,
+            text: 'Price (USD)'
+          },
+          ticks: {
+            callback: (value) => '$' + value.toLocaleString()
+          }
+        }
       },
     }
   );
@@ -130,7 +145,7 @@ function AIPredictionChart() {
 
       {/* Chart */}
       <div className={styles.chartContainer}>
-        <Line data={chartConfig.data} options={chartConfig.options} />
+        <Line key={timeRange} data={chartConfig.data} options={chartConfig.options} />
       </div>
 
       {/* Stats Footer */}

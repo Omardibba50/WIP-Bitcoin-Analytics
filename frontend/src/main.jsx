@@ -26,6 +26,9 @@ import { CandlestickController, CandlestickElement } from 'chartjs-chart-financi
 // Register Date Adapter for time-based charts
 import 'chartjs-adapter-date-fns';
 
+// Register Annotation Plugin for MVRVChart and others
+import annotationPlugin from 'chartjs-plugin-annotation';
+
 // Register all Chart.js components globally
 ChartJS.register(
   CategoryScale,
@@ -40,7 +43,8 @@ ChartJS.register(
   TimeScale,
   Filler,
   CandlestickController,
-  CandlestickElement
+  CandlestickElement,
+  annotationPlugin
 );
 
 ReactDOM.createRoot(document.getElementById('root')).render(

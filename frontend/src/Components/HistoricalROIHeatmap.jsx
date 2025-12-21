@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner } from './ui';
 import { API_CONFIG } from '../constants/config';
 import styles from './HistoricalROIHeatmap.module.css';
 

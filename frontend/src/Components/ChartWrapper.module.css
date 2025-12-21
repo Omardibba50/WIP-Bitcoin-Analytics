@@ -1,0 +1,250 @@
+/* ChartWrapper Component Styles */
+.container {
+  position: relative;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s ease;
+}
+
+.container:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Header Styles */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+.titleSection {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.dataSource {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.dataSourceLabel {
+  color: var(--color-text-secondary);
+}
+
+.dataSourceValue {
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+}
+
+/* Header Actions */
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.timeRangeContainer {
+  display: flex;
+  align-items: center;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Refresh Button */
+.refreshButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-card-border);
+  background: var(--color-card-bg);
+  border-radius: 8px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refreshButton:hover:not(:disabled) {
+  background: var(--color-hover);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.refreshButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refreshButton.loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Metrics Section */
+.metricsSection {
+  margin-bottom: 20px;
+  padding: 12px;
+  background: var(--color-background-secondary);
+  border-radius: 8px;
+}
+
+/* Chart Container */
+.chartContainer {
+  position: relative;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Loading State */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  color: var(--color-text-secondary);
+}
+
+.loadingContainer p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Error State */
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  text-align: center;
+}
+
+.errorIcon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.errorContainer h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--color-error);
+}
+
+.errorContainer p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+/* Retry Button */
+.retryButton {
+  padding: 8px 16px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.retryButton:hover {
+  background: var(--color-primary-hover);
+}
+
+/* Footer */
+.footer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-card-border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.lastUpdated {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .headerActions {
+    justify-content: space-between;
+  }
+  
+  .title {
+    font-size: 16px;
+  }
+  
+  .subtitle {
+    font-size: 13px;
+  }
+  
+  .chartContainer {
+    min-height: 250px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 12px;
+  }
+  
+  .timeRangeContainer {
+    order: -1;
+    width: 100%;
+    margin-bottom: 8px;
+  }
+  
+  .chartContainer {
+    min-height: 200px;
+  }
+}

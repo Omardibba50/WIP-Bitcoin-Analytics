@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { useDataFetch } from '../hooks/useDataFetch';
 import { treasuryApi, priceApi } from '../services/apiClient';
-import { Card, LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner } from './ui';
 import { createBarChart, createDoughnutChart } from '../utils/chartFactory';
 import CompanyDetailModal from './CompanyDetailModal';
 import styles from './CorporateTreasuries.module.css';

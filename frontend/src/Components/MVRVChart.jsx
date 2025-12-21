@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
-import { Card, LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner } from './ui';
 import { createLineChart } from '../utils/chartFactory';
 import { colors } from '../styles/designSystem';
 import { API_CONFIG } from '../constants/config';
@@ -170,36 +170,6 @@ const MVRVChart = () => {
               `MVRV: ${mvrv.toFixed(3)}`,
               `Zone: ${zone.zone}`
             ];
-          }
-        }
-      },
-      annotation: {
-        annotations: {
-          overvalued: {
-            type: 'line',
-            yMin: 3.5,
-            yMax: 3.5,
-            borderColor: colors.error,
-            borderWidth: 2,
-            borderDash: [5, 5],
-            label: {
-              content: 'Overvalued (3.5)',
-              enabled: true,
-              position: 'end'
-            }
-          },
-          neutral: {
-            type: 'line',
-            yMin: 1.0,
-            yMax: 1.0,
-            borderColor: colors.success,
-            borderWidth: 2,
-            borderDash: [5, 5],
-            label: {
-              content: 'Fair Value (1.0)',
-              enabled: true,
-              position: 'end'
-            }
           }
         }
       }

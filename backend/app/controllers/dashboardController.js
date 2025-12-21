@@ -258,7 +258,7 @@ function getAIPredictionLatest(req, res) {
  */
 async function fetchPriceHistory() {
   return new Promise((resolve, reject) => {
-    const mockReq = { query: { symbol: 'BTC', limit: 100 } };
+    const mockReq = { query: { symbol: 'BTC', limit: 3000 } };
     const mockRes = {
       json: (payload) => {
         if (payload?.success && payload.data) return resolve(payload.data || []);

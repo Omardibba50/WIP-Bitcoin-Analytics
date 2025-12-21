@@ -3,7 +3,7 @@ import { Line } from 'react-chartjs-2';
 import { useDataFetch } from '../hooks/useDataFetch';
 import { metricsApi } from '../services/apiClient';
 import { createLineChart, formatLargeNumber } from '../utils/chartFactory';
-import { Card, LoadingSpinner } from '../components/ui';
+import { Card, LoadingSpinner, EmptyState } from './ui';
 import { colors } from '../styles/designSystem';
 import styles from './HashRateChart.module.css';
 
@@ -201,13 +201,16 @@ const HashRateChart = ({ data: propData }) => {
         )}
 
         {!loading && !error && data.length === 0 && (
-          <div className={styles.centerContent}>
-            <p>No data available</p>
-          </div>
+          <EmptyState 
+            message="No hash rate data available"
+            icon="⛏️"
+            action={refetch}
+            actionLabel="Refresh Data"
+          />
         )}
 
         {!loading && !error && data.length > 0 && chartData.datasets.length > 0 && (
-          <Line data={chartConfig.data} options={chartConfig.options} />
+          <Line key={timeRange} data={chartConfig.data} options={chartConfig.options} />
         )}
       </div>
     </Card>
