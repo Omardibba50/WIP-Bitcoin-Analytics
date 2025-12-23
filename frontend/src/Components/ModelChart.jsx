@@ -20,7 +20,26 @@ function ModelChart({ models, loading }) {
   const chart = createBarChart(datasets, labels, { 
     plugins: {
       title: { display: false }
-    }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Model Name',
+        },
+      },
+      y: {
+        beginAtZero: true,
+        max: 1,
+        title: {
+          display: true,
+          text: 'Accuracy',
+        },
+        ticks: {
+          callback: (value) => (value * 100).toFixed(0) + '%',
+        },
+      },
+    },
   });
 
   return (

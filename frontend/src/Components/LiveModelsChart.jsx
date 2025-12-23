@@ -86,7 +86,7 @@ export default function LiveModelsChart() {
       label: 'Model Accuracy (%)',
       data: models.map(m => {
         const accuracy = Number(m?.accuracy || 0);
-        return isNaN(accuracy) ? 0 : (accuracy * 100).toFixed(2);
+        return isNaN(accuracy) ? 0 : accuracy * 100;
       }),
       backgroundColor: [colors.primary || '#00b3ff', colors.primaryDark || '#0080ff', colors.info || '#3b82f6'],
       borderRadius: 8,
@@ -115,12 +115,27 @@ export default function LiveModelsChart() {
   try {
     chartConfig = createBarChart(datasets, labels, {
       scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'AI Models',
+            color: colors.textPrimary,
+          },
+          ticks: {
+            color: colors.textSecondary,
+          },
+        },
         y: {
           beginAtZero: true,
           max: 100,
           title: {
             display: true,
             text: 'Accuracy (%)',
+            color: colors.textPrimary,
+          },
+          ticks: {
+            color: colors.textSecondary,
+            callback: (value) => value + '%',
           },
         },
       },
@@ -150,6 +165,12 @@ export default function LiveModelsChart() {
 
   return (
     <Card className={styles.container}>
+      {/* Header */}
+      <div className={styles.header}>
+        <h3 className={styles.title}>Live AI Models Performance</h3>
+        <p className={styles.subtitle}>Real-time accuracy metrics for prediction models</p>
+      </div>
+
       {/* Chart Section */}
       <div className={styles.chartContainer}>
         <Bar data={chartConfig.data} options={chartConfig.options} />

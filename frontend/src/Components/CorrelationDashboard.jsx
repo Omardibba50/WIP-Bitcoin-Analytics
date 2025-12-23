@@ -92,6 +92,19 @@ function CorrelationDashboard() {
             x: {
               min: -1,
               max: 1,
+              title: {
+                display: true,
+                text: 'Correlation Coefficient',
+              },
+              ticks: {
+                callback: (value) => value.toFixed(1),
+              },
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Metric',
+              },
             },
           },
           plugins: {

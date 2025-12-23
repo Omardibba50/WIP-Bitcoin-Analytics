@@ -4,6 +4,23 @@
   margin-bottom: var(--spacing-xl);
 }
 
+.header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.title {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
 .chartContainer {
   height: 350px;
   width: 100%;

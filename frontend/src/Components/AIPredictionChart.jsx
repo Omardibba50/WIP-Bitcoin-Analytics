@@ -49,18 +49,27 @@ function AIPredictionChart() {
     );
   }
 
-  // Prepare chart data
-  const actualData = (Array.isArray(priceHistory) ? priceHistory : []).map(p => ({
-    x: new Date(p.ts || p.timestamp),
-    y: p.price
-  }));
+  // Prepare chart data filtered by selected time range
+  const renderNow = Date.now();
+  const renderRanges = { '24h': 24 * 60 * 60 * 1000, '7d': 7 * 24 * 60 * 60 * 1000, '30d': 30 * 24 * 60 * 60 * 1000 };
+  const renderFrom = renderNow - (renderRanges[timeRange] || renderRanges['24h']);
+
+  const actualData = (Array.isArray(priceHistory) ? priceHistory : [])
+    .filter(p => {
+      const t = p.ts || p.timestamp;
+      return typeof t === 'number' && t >= renderFrom && t <= renderNow;
+    })
+    .map(p => ({
+      x: new Date(p.ts || p.timestamp),
+      y: p.price
+    }));
 
   const predictionData = (Array.isArray(predictions) ? predictions : [])
-    .filter(p => p.predicted_price && p.ts)
+    .filter(p => p.predicted_price && p.ts && p.ts >= renderFrom && p.ts <= renderNow)
     .map(p => ({
       x: new Date(p.ts),
-    y: p.predicted_price
-  }));
+      y: p.predicted_price
+    }));
 
   const datasets = [
     {

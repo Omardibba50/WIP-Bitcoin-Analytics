@@ -41,6 +41,9 @@ const HashRateChart = ({ data: propData }) => {
 
   // ALWAYS prioritize prop data over fetched data
   const data = (propData && propData.length > 0) ? propData : (fetchedData || []);
+  const daysMap = { '7d': 7, '30d': 30, '90d': 90, '1y': 365, 'all': null };
+  const cutoff = daysMap[timeRange] ? Date.now() - daysMap[timeRange] * 24 * 60 * 60 * 1000 : 0;
+  const visibleData = (Array.isArray(data) ? data : []).filter(item => !daysMap[timeRange] || item.timestamp >= cutoff);
 
   // Time range options
   const timeRanges = [
@@ -53,13 +56,12 @@ const HashRateChart = ({ data: propData }) => {
 
   // Format data for chart
   const formatChartData = () => {
-    if (!data || data.length === 0) {
+    if (!visibleData || visibleData.length === 0) {
       return { labels: [], datasets: [] };
     }
 
-    // Sample data for performance (max 200 points)
-    const samplingRate = Math.max(1, Math.floor(data.length / 200));
-    const sampledData = data.filter((_, index) => index % samplingRate === 0);
+    const samplingRate = Math.max(1, Math.floor(visibleData.length / 200));
+    const sampledData = visibleData.filter((_, index) => index % samplingRate === 0);
 
     const labels = sampledData.map(item => {
       const date = new Date(item.timestamp);
@@ -104,6 +106,41 @@ const HashRateChart = ({ data: propData }) => {
 
   // Create chart configuration using chartFactory
   const chartConfig = createLineChart(chartData.datasets, chartData.labels, {
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top',
+        labels: {
+          color: colors.textPrimary,
+          font: {
+            size: 12,
+            weight: '500',
+            family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          },
+          padding: 12,
+          usePointStyle: true,
+        },
+        // Ensure both datasets are visible by default
+        display: true,
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            let label = context.dataset.label || '';
+            if (label) label += ': ';
+            
+            if (context.datasetIndex === 0) {
+              // Hash rate
+              label += formatLargeNumber(context.parsed.y) + ' TH/s';
+            } else {
+              // Price
+              label += '$' + formatLargeNumber(context.parsed.y);
+            }
+            return label;
+          }
+        }
+      }
+    },
     scales: {
       y: {
         type: 'linear',
@@ -200,7 +237,7 @@ const HashRateChart = ({ data: propData }) => {
           </div>
         )}
 
-        {!loading && !error && data.length === 0 && (
+        {!loading && !error && visibleData.length === 0 && (
           <EmptyState 
             message="No hash rate data available"
             icon="⛏️"
@@ -209,7 +246,7 @@ const HashRateChart = ({ data: propData }) => {
           />
         )}
 
-        {!loading && !error && data.length > 0 && chartData.datasets.length > 0 && (
+        {!loading && !error && visibleData.length > 0 && chartData.datasets.length > 0 && (
           <Line key={timeRange} data={chartConfig.data} options={chartConfig.options} />
         )}
       </div>

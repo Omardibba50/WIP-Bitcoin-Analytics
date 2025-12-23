@@ -204,12 +204,14 @@ const MainDashboard = () => {
               </div>
             </section>
 
-            {/* Network Charts Grid - 3 columns */}
+            {/* Network Health - 2 column grid with Stock-to-Flow below */}
             <section id="network" className={styles.section}>
               <h2 className={styles.sectionTitle}>Network Health</h2>
-              <div className={styles.chartsGrid}>
+              <div className={styles.chartsGridTwo}>
                 <HashRateChart data={safeHashrateHistory} />
                 <DifficultyChart data={safeDifficultyHistory} />
+              </div>
+              <div className={styles.stockFlowContainer}>
                 <StockFlowChart />
               </div>
             </section>

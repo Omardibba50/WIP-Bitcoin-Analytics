@@ -53,7 +53,24 @@ export default function PricePerformanceChart() {
         legend: {
           display: false
         }
-      }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Time Period',
+          },
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Price Change (%)',
+          },
+          ticks: {
+            callback: (value) => value.toFixed(1) + '%',
+          },
+        },
+      },
     }
   );
 
