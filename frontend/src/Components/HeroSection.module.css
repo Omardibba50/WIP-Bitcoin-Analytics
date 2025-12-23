@@ -287,12 +287,201 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
 }
 
 .metaItem {
   font-size: 10px;
   color: var(--color-text-tertiary);
   font-weight: var(--font-weight-medium);
+}
+
+/* Horizon Selector */
+.horizonSelector {
+  display: flex;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-surface-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.horizonButton {
+  flex: 1;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: transparent;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.horizonButton:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary);
+  color: var(--color-text-primary);
+}
+
+.horizonButton.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Price Range Display */
+.priceRange {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-normal);
+  margin-top: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-surface-subtle);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+}
+
+/* Context Indicators */
+.contextIndicators {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm);
+  background: var(--color-surface-subtle);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.contextItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+
+.contextLabel {
+  font-size: 9px;
+  color: var(--color-text-tertiary);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.contextValue {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.contextBadge {
+  font-size: 8px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* RSI States */
+.rsi-oversold {
+  color: #10b981;
+}
+
+.rsi-oversold .contextBadge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.rsi-neutral {
+  color: var(--color-text-primary);
+}
+
+.rsi-neutral .contextBadge {
+  background: var(--color-surface-hover);
+  color: var(--color-text-secondary);
+}
+
+.rsi-overbought {
+  color: #ef4444;
+}
+
+.rsi-overbought .contextBadge {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* Trend States */
+.trend-bullish {
+  color: #10b981;
+  text-transform: capitalize;
+}
+
+.trend-bearish {
+  color: #ef4444;
+  text-transform: capitalize;
+}
+
+/* Volatility States */
+.vol-low {
+  color: #10b981;
+}
+
+.vol-low .contextBadge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.vol-normal {
+  color: var(--color-text-primary);
+}
+
+.vol-normal .contextBadge {
+  background: var(--color-surface-hover);
+  color: var(--color-text-secondary);
+}
+
+.vol-high {
+  color: #f59e0b;
+}
+
+.vol-high .contextBadge {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+/* Disclaimer */
+.disclaimer {
+  font-size: 9px;
+  color: var(--color-text-tertiary);
+  font-style: italic;
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-border-subtle);
+  text-align: center;
+}
+
+/* Responsive adjustments for context indicators */
+@media (max-width: 768px) {
+  .contextIndicators {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xs);
+  }
+  
+  .contextItem {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
 }
 
 /* Network Stats Card Specific Styles */

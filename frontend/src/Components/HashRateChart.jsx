@@ -72,33 +72,43 @@ const HashRateChart = ({ data: propData }) => {
       });
     });
 
-    return {
-      labels,
-      datasets: [
-        {
-          label: 'Hash Rate (TH/s)',
-          data: sampledData.map(item => item.hashrate),
-          borderColor: colors.success,
-          backgroundColor: colors.success + '20',
-          yAxisID: 'y',
-          tension: 0.4,
-          pointRadius: 1,
-          pointHoverRadius: 5,
-          borderWidth: 2,
-        },
-        {
-          label: 'BTC Price (USD)',
-          data: sampledData.map(item => item.price),
-          borderColor: colors.primary,
-          backgroundColor: colors.primary + '20',
-          yAxisID: 'y1',
-          tension: 0.4,
-          pointRadius: 1,
-          pointHoverRadius: 5,
-          borderWidth: 2,
-        }
-      ]
-    };
+    // Filter out null/undefined values and ensure both datasets have valid data
+    const hashrateData = sampledData.map(item => item.hashrate).filter(v => v != null);
+    const priceData = sampledData.map(item => item.price).filter(v => v != null);
+
+    const datasets = [];
+
+    // Always add hashrate dataset
+    datasets.push({
+      label: 'Hash Rate (TH/s)',
+      data: sampledData.map(item => item.hashrate),
+      borderColor: colors.success,
+      backgroundColor: colors.success + '20',
+      yAxisID: 'y',
+      tension: 0.4,
+      pointRadius: 1,
+      pointHoverRadius: 5,
+      borderWidth: 2,
+      hidden: false, // Explicitly show
+    });
+
+    // Only add price dataset if we have valid price data
+    if (priceData.length > 0) {
+      datasets.push({
+        label: 'BTC Price (USD)',
+        data: sampledData.map(item => item.price),
+        borderColor: colors.primary,
+        backgroundColor: colors.primary + '20',
+        yAxisID: 'y1',
+        tension: 0.4,
+        pointRadius: 1,
+        pointHoverRadius: 5,
+        borderWidth: 2,
+        hidden: false, // Explicitly show
+      });
+    }
+
+    return { labels, datasets };
   };
 
   // Get formatted chart data
@@ -106,41 +116,6 @@ const HashRateChart = ({ data: propData }) => {
 
   // Create chart configuration using chartFactory
   const chartConfig = createLineChart(chartData.datasets, chartData.labels, {
-    plugins: {
-      legend: {
-        display: true,
-        position: 'top',
-        labels: {
-          color: colors.textPrimary,
-          font: {
-            size: 12,
-            weight: '500',
-            family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-          },
-          padding: 12,
-          usePointStyle: true,
-        },
-        // Ensure both datasets are visible by default
-        display: true,
-      },
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            let label = context.dataset.label || '';
-            if (label) label += ': ';
-            
-            if (context.datasetIndex === 0) {
-              // Hash rate
-              label += formatLargeNumber(context.parsed.y) + ' TH/s';
-            } else {
-              // Price
-              label += '$' + formatLargeNumber(context.parsed.y);
-            }
-            return label;
-          }
-        }
-      }
-    },
     scales: {
       y: {
         type: 'linear',
@@ -161,7 +136,7 @@ const HashRateChart = ({ data: propData }) => {
       },
       y1: {
         type: 'linear',
-        display: true,
+        display: chartData.datasets.length > 1, // Only show if we have price data
         position: 'right',
         title: {
           display: true,
@@ -178,6 +153,20 @@ const HashRateChart = ({ data: propData }) => {
       }
     },
     plugins: {
+      legend: {
+        display: true,
+        position: 'top',
+        labels: {
+          color: colors.textPrimary,
+          font: {
+            size: 12,
+            weight: '500',
+            family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          },
+          padding: 12,
+          usePointStyle: true,
+        },
+      },
       tooltip: {
         callbacks: {
           label: (context) => {

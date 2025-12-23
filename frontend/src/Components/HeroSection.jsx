@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './HeroSection.module.css';
 
 /**
@@ -33,13 +33,35 @@ const HeroSection = ({ priceSummary, aiPrediction, allTimeHigh, latestBlock, min
                     priceSummary?.market_cap_usd || 
                     priceSummary?.market_data?.market_cap?.usd || 0;
   
-  // Handle prediction structure - data orchestrator already extracts the prediction object
-  const prediction = aiPrediction;
+  // State for horizon selection
+  const [selectedHorizon, setSelectedHorizon] = useState('1h');
+  
+  // Handle multi-horizon predictions (new format) or single prediction (backward compatible)
+  const isMultiHorizon = aiPrediction && typeof aiPrediction === 'object' && ('1h' in aiPrediction || '24h' in aiPrediction || '7d' in aiPrediction);
+  
+  let prediction;
+  if (isMultiHorizon) {
+    // New multi-horizon format
+    prediction = aiPrediction[selectedHorizon] || aiPrediction['1h'] || null;
+  } else {
+    // Old single prediction format (backward compatible)
+    prediction = aiPrediction;
+  }
+  
   const predictedPrice = prediction?.predicted_price || 0;
+  const predictedLow = prediction?.predicted_low || 0;
+  const predictedHigh = prediction?.predicted_high || 0;
   const confidence = prediction?.confidence || 0;
+  const hasRange = predictedLow > 0 && predictedHigh > 0;
+  
+  // Extract context indicators
+  const context = prediction?.context || (isMultiHorizon ? aiPrediction?.context : null);
+  const hasContext = context && context.rsi !== undefined;
   
   console.log('🔍 PREDICTION DATA:');
   console.log('   aiPrediction:', aiPrediction);
+  console.log('   isMultiHorizon:', isMultiHorizon);
+  console.log('   selectedHorizon:', selectedHorizon);
   console.log('   prediction object:', prediction);
   console.log('   predictedPrice:', predictedPrice);
   console.log('   confidence:', confidence);
@@ -212,6 +234,22 @@ const HeroSection = ({ priceSummary, aiPrediction, allTimeHigh, latestBlock, min
             <span className={styles.cardTitle}>AI Price Prediction</span>
             <span className={styles.liveBadge}>● LIVE</span>
           </div>
+          
+          {/* Horizon Selector - Only show if multi-horizon data available */}
+          {isMultiHorizon && (
+            <div className={styles.horizonSelector}>
+              {['1h', '24h', '7d'].map(horizon => (
+                <button
+                  key={horizon}
+                  className={`${styles.horizonButton} ${selectedHorizon === horizon ? styles.active : ''}`}
+                  onClick={() => setSelectedHorizon(horizon)}
+                >
+                  {horizon.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          )}
+          
           <div className={styles.predictionDisplay}>
             <div className={styles.predictionRow}>
               <div className={styles.predictionCol}>
@@ -228,13 +266,20 @@ const HeroSection = ({ priceSummary, aiPrediction, allTimeHigh, latestBlock, min
                 </div>
               </div>
               <div className={styles.predictionCol}>
-                <div className={styles.predLabel}>Predicted Price</div>
+                <div className={styles.predLabel}>Predicted Price ({selectedHorizon})</div>
                 <div className={styles.predValue}>
                   {predictedPrice > 0 ? (
-                    `$${predictedPrice.toLocaleString('en-US', { 
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2 
-                    })}`
+                    <>
+                      ${predictedPrice.toLocaleString('en-US', { 
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2 
+                      })}
+                      {hasRange && (
+                        <div className={styles.priceRange}>
+                          Range: ${predictedLow.toLocaleString('en-US', { maximumFractionDigits: 0 })} - ${predictedHigh.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <span style={{ color: 'var(--color-text-tertiary)' }}>Loading...</span>
                   )}
@@ -255,8 +300,38 @@ const HeroSection = ({ priceSummary, aiPrediction, allTimeHigh, latestBlock, min
                 />
               </div>
               <div className={styles.predictionMeta}>
-                <span className={styles.metaItem}>Time Horizon: {prediction?.horizon || '1h'}</span>
-                <span className={styles.metaItem}>Model: {prediction?.model_id || 'LSTM'}</span>
+                <span className={styles.metaItem}>Model: {prediction?.model_type || 'LSTM'}</span>
+                {prediction?.timestamp && (
+                  <span className={styles.metaItem}>Updated: {new Date(prediction.timestamp).toLocaleTimeString()}</span>
+                )}
+              </div>
+              
+              {/* Context Indicators */}
+              {hasContext && (
+                <div className={styles.contextIndicators}>
+                  <div className={styles.contextItem}>
+                    <span className={styles.contextLabel}>RSI (14)</span>
+                    <span className={`${styles.contextValue} ${styles[`rsi-${context.rsi_state}`]}`}>
+                      {context.rsi.toFixed(1)} <span className={styles.contextBadge}>{context.rsi_state}</span>
+                    </span>
+                  </div>
+                  <div className={styles.contextItem}>
+                    <span className={styles.contextLabel}>Trend</span>
+                    <span className={`${styles.contextValue} ${styles[`trend-${context.trend}`]}`}>
+                      {context.trend === 'bullish' ? '↑' : '↓'} {context.trend}
+                    </span>
+                  </div>
+                  <div className={styles.contextItem}>
+                    <span className={styles.contextLabel}>Volatility</span>
+                    <span className={`${styles.contextValue} ${styles[`vol-${context.volatility_regime}`]}`}>
+                      {context.volatility.toFixed(2)}% <span className={styles.contextBadge}>{context.volatility_regime}</span>
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              <div className={styles.disclaimer}>
+                Not investment advice. Confidence is volatility-derived.
               </div>
             </div>
           </div>

@@ -176,14 +176,18 @@ async function fetchLatestBlock() {
 }
 
 /**
- * Fetch AI prediction
+ * Fetch AI prediction (with multi-horizon support)
  */
 async function fetchAIPrediction() {
   return new Promise((resolve, reject) => {
-    const mockReq = {};
+    const mockReq = { query: { multi: '1' } }; // Request multi-horizon predictions
     const mockRes = {
       json: (payload) => {
-        // Extract the prediction object from the AI response structure
+        // If multi-horizon predictions are available, return them
+        if (payload?.predictions) {
+          return resolve(payload.predictions);
+        }
+        // Otherwise extract single prediction (backward compatibility)
         if (payload?.prediction) {
           return resolve(payload.prediction);
         }
@@ -203,8 +207,29 @@ async function fetchAIPrediction() {
 /**
  * Get latest AI prediction (same logic as /api/ai/predictions/latest)
  */
-function getAIPredictionLatest(req, res) {
+async function getAIPredictionLatest(req, res) {
   try {
+    const multiHorizon = req.query?.multi === '1' || req.query?.multi === 'true';
+
+    // If multi-horizon requested, generate fresh predictions
+    if (multiHorizon) {
+      console.log('[Dashboard] Generating multi-horizon predictions...');
+      const { getAIPredictionService } = await import('../services/aiPredictionService.js');
+      const service = getAIPredictionService();
+      const predictions = await service.predictMultipleHorizons();
+      
+      return res.json({
+        prediction: predictions['1h'], // Backward compatibility
+        predictions: predictions,
+        meta: {
+          generated_at: new Date(predictions.timestamp).toISOString(),
+          source: 'live',
+          horizons: ['1h', '24h', '7d']
+        }
+      });
+    }
+
+    // Default: return latest from DB
     const db = getDb();
     
     console.log('[Dashboard] Fetching AI prediction from database...');

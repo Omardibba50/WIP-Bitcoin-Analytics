@@ -13,9 +13,30 @@ const router = express.Router();
 /**
  * GET /api/ai/predictions/latest
  * Get the most recent AI prediction
+ * Query params:
+ *   - multi=1: Return predictions for all horizons (1h, 24h, 7d)
  */
 router.get('/latest', async (req, res) => {
   try {
+    const multiHorizon = req.query.multi === '1' || req.query.multi === 'true';
+
+    // If multi-horizon requested, generate fresh predictions
+    if (multiHorizon) {
+      const service = getAIPredictionService();
+      const predictions = await service.predictMultipleHorizons();
+      
+      return res.json({
+        prediction: predictions['1h'], // Backward compatibility
+        predictions: predictions,
+        meta: {
+          generated_at: new Date(predictions.timestamp).toISOString(),
+          source: 'live',
+          horizons: ['1h', '24h', '7d']
+        }
+      });
+    }
+
+    // Default: return latest from DB (backward compatible)
     const db = getDb();
     const prediction = db.prepare(`
       SELECT * FROM predictions 

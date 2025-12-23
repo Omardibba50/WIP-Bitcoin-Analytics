@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import { useDataFetch } from '../hooks/useDataFetch';
-import { metricsApi, priceApi } from '../services/apiClient';
+import { apiClient, priceApi } from '../services/apiClient';
 import { createLineChart, formatLargeNumber } from '../utils/chartFactory';
 import { Card, LoadingSpinner, EmptyState } from './ui';
 import { colors } from '../styles/designSystem';
@@ -18,6 +18,8 @@ import styles from './BTCGoldChart.module.css';
  */
 const BTCGoldChart = () => {
   const [timeRange, setTimeRange] = useState('30d');
+  const [showBTC, setShowBTC] = useState(true);
+  const [showGold, setShowGold] = useState(true);
 
   // Fetch BTC price history
   const { 
@@ -41,13 +43,14 @@ const BTCGoldChart = () => {
     }
   );
 
-  // Fetch gold metrics (includes current gold price) - optional, won't block chart
+  // Fetch gold price history (XAUUSD daily) from backend proxy
   const { 
-    data: goldData
+    data: goldPriceData,
+    refetch: refetchGoldPrice
   } = useDataFetch(
-    () => metricsApi.getGoldMetrics().catch(() => null),
+    () => apiClient.get('/proxy/gold-xauusd'),
     {
-      interval: 5 * 60 * 1000,
+      interval: 12 * 60 * 60 * 1000,
       priority: 'tertiary',
       dependencies: [],
       enabled: true,
@@ -70,6 +73,26 @@ const BTCGoldChart = () => {
     return map[range] || 30;
   }
 
+  const normalizeTimestampMs = (ts) => {
+    const n = Number(ts);
+    if (!Number.isFinite(n)) return null;
+    return n < 1e12 ? n * 1000 : n;
+  };
+
+  const dayKeyMs = (tsMs) => {
+    const d = new Date(tsMs);
+    if (isNaN(d.getTime())) return null;
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  };
+
+  const rangeBounds = useMemo(() => {
+    const days = getDaysFromRange(timeRange);
+    const to = Date.now();
+    const from = to - (days * 24 * 60 * 60 * 1000);
+    return { from, to };
+  }, [timeRange]);
+
   // Format data for chart
   const formatChartData = () => {
     // btcPriceData is already an array, not { data: [...] }
@@ -77,24 +100,54 @@ const BTCGoldChart = () => {
       return { labels: [], datasets: [] };
     }
 
-    const priceHistory = btcPriceData;
-    // Use actual gold price if available, otherwise use approximate $2000/oz
-    const currentGoldPrice = goldData?.data?.goldPricePerOz || 2000;
+    const btcByDay = new Map();
+    btcPriceData.forEach(p => {
+      const tsMs = normalizeTimestampMs(p.timestamp ?? p.ts);
+      if (!tsMs) return;
+      if (tsMs < rangeBounds.from || tsMs > rangeBounds.to) return;
+      const dk = dayKeyMs(tsMs);
+      if (!dk) return;
+      btcByDay.set(dk, p.price);
+    });
 
-    // Sample data for performance (max 200 points)
-    const samplingRate = Math.max(1, Math.floor(priceHistory.length / 200));
-    const sampledData = priceHistory.filter((_, index) => index % samplingRate === 0);
+    const goldArr = Array.isArray(goldPriceData) ? goldPriceData : (goldPriceData?.data || []);
+    const goldByDay = new Map();
+    goldArr.forEach(g => {
+      const tsMs = normalizeTimestampMs(g.timestamp ?? g.ts);
+      if (!tsMs) return;
+      if (tsMs < rangeBounds.from || tsMs > rangeBounds.to) return;
+      const dk = dayKeyMs(tsMs);
+      if (!dk) return;
+      goldByDay.set(dk, g.price);
+    });
 
-    const labels = sampledData.map(item => {
-      // Handle both timestamp formats (seconds or milliseconds)
-      const timestamp = item.timestamp || item.ts;
-      const date = new Date(timestamp);
-      
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        return '';
-      }
-      
+    const allDays = Array.from(new Set([...btcByDay.keys(), ...goldByDay.keys()])).sort((a, b) => a - b);
+    if (allDays.length === 0) {
+      return { labels: [], datasets: [] };
+    }
+
+    const merged = allDays.map(dk => ({
+      timestamp: dk,
+      btc: btcByDay.get(dk) ?? null,
+      gold: goldByDay.get(dk) ?? null,
+    }));
+
+    let lastBtc = null;
+    let lastGold = null;
+    merged.forEach(row => {
+      if (row.btc != null) lastBtc = row.btc;
+      else if (lastBtc != null) row.btc = lastBtc;
+
+      if (row.gold != null) lastGold = row.gold;
+      else if (lastGold != null) row.gold = lastGold;
+    });
+
+    const samplingRate = Math.max(1, Math.floor(merged.length / 200));
+    const sampled = merged.filter((_, idx) => idx % samplingRate === 0);
+
+    const labels = sampled.map(item => {
+      const date = new Date(item.timestamp);
+      if (isNaN(date.getTime())) return '';
       return date.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -102,36 +155,36 @@ const BTCGoldChart = () => {
       });
     });
 
-    // Calculate BTC price in gold ounces (using current gold price for all historical BTC prices)
-    const btcInGold = sampledData.map(item => item.price / currentGoldPrice);
+    const datasets = [];
+    if (showBTC) {
+      datasets.push({
+        label: 'BTC Price (USD)',
+        data: sampled.map(item => item.btc),
+        borderColor: colors.primary,
+        backgroundColor: colors.primary + '20',
+        yAxisID: 'y',
+        tension: 0.4,
+        pointRadius: 1,
+        pointHoverRadius: 5,
+        borderWidth: 2,
+      });
+    }
 
-    return {
-      labels,
-      datasets: [
-        {
-          label: 'BTC Price (USD)',
-          data: sampledData.map(item => item.price),
-          borderColor: colors.primary,
-          backgroundColor: colors.primary + '20',
-          yAxisID: 'y',
-          tension: 0.4,
-          pointRadius: 1,
-          pointHoverRadius: 5,
-          borderWidth: 2,
-        },
-        {
-          label: 'BTC in Gold (oz)',
-          data: btcInGold,
-          borderColor: colors.warning,
-          backgroundColor: colors.warning + '20',
-          yAxisID: 'y1',
-          tension: 0.4,
-          pointRadius: 1,
-          pointHoverRadius: 5,
-          borderWidth: 2,
-        }
-      ]
-    };
+    if (showGold) {
+      datasets.push({
+        label: 'Gold Price (USD/oz)',
+        data: sampled.map(item => item.gold),
+        borderColor: colors.warning,
+        backgroundColor: colors.warning + '20',
+        yAxisID: 'y1',
+        tension: 0.4,
+        pointRadius: 1,
+        pointHoverRadius: 5,
+        borderWidth: 2,
+      });
+    }
+
+    return { labels, datasets };
   };
 
   // Get formatted chart data
@@ -142,7 +195,7 @@ const BTCGoldChart = () => {
     scales: {
       y: {
         type: 'linear',
-        display: true,
+        display: showBTC,
         position: 'left',
         title: {
           display: true,
@@ -159,16 +212,16 @@ const BTCGoldChart = () => {
       },
       y1: {
         type: 'linear',
-        display: true,
+        display: showGold,
         position: 'right',
         title: {
           display: true,
-          text: 'BTC in Gold (oz)',
+          text: 'Gold Price (USD/oz)',
           color: colors.warning,
         },
         ticks: {
           color: colors.warning,
-          callback: (value) => value.toFixed(2) + ' oz'
+          callback: (value) => '$' + formatLargeNumber(value)
         },
         grid: {
           drawOnChartArea: false
@@ -182,13 +235,7 @@ const BTCGoldChart = () => {
             let label = context.dataset.label || '';
             if (label) label += ': ';
             
-            if (context.datasetIndex === 0) {
-              // BTC Price in USD
-              label += '$' + formatLargeNumber(context.parsed.y);
-            } else {
-              // BTC in Gold ounces
-              label += context.parsed.y.toFixed(2) + ' oz';
-            }
+            label += '$' + formatLargeNumber(context.parsed.y);
             return label;
           }
         }
@@ -201,6 +248,32 @@ const BTCGoldChart = () => {
       {/* Header with time range selector */}
       <div className={styles.header}>
         <h3 className={styles.title}>BTC vs Gold Comparison</h3>
+
+        <div className={styles.seriesToggles}>
+          <button
+            type="button"
+            onClick={() => {
+              if (showBTC && !showGold) return;
+              setShowBTC(v => !v);
+            }}
+            className={`${styles.seriesToggle} ${showBTC ? styles.seriesToggleActive : ''}`}
+            aria-pressed={showBTC}
+          >
+            BTC
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (showGold && !showBTC) return;
+              setShowGold(v => !v);
+            }}
+            className={`${styles.seriesToggle} ${showGold ? styles.seriesToggleActive : ''}`}
+            aria-pressed={showGold}
+          >
+            Gold
+          </button>
+        </div>
+
         <div className={styles.timeRangeButtons}>
           {timeRanges.map(range => (
             <button
@@ -236,7 +309,10 @@ const BTCGoldChart = () => {
           <EmptyState 
             message="No BTC/Gold comparison data available"
             icon="📈"
-            action={refetchBtcPrice}
+            action={() => {
+              refetchBtcPrice();
+              refetchGoldPrice();
+            }}
             actionLabel="Refresh Data"
           />
         )}

@@ -1,11 +1,15 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { apiClient } from '../services/apiClient';
-import './InvestmentCalculator.css';
+import { apiClient, priceApi } from '../services/apiClient';
+import { Card } from './ui';
+import styles from './InvestmentCalculator.module.css';
 
 const InvestmentCalculator = () => {
+  const [mode, setMode] = useState('historical'); // 'historical' or 'forecast'
   const [investmentEntries, setInvestmentEntries] = useState([
     { year: '', amount: '' },
   ]);
+  const [forecastAmount, setForecastAmount] = useState('');
+  const [forecastHorizon, setForecastHorizon] = useState('24h');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -49,7 +53,15 @@ const InvestmentCalculator = () => {
   }
 
   async function fetchCurrentPrice() {
-    // 1) Try CoinGecko
+    // 1) Prefer backend price (more reliable, avoids browser CORS/rate limits)
+    try {
+      const resp = await priceApi.getLatest('BTC');
+      const row = resp?.data ?? resp;
+      const val = Number(row?.price);
+      if (Number.isFinite(val)) return val;
+    } catch (_) {}
+
+    // 2) Try CoinGecko
     try {
       const url = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd';
       const resp = await fetch(url);
@@ -59,7 +71,8 @@ const InvestmentCalculator = () => {
         if (Number.isFinite(val)) return val;
       }
     } catch (_) {}
-    // 2) Try CoinDesk
+
+    // 3) Try CoinDesk
     try {
       const resp = await fetch('https://api.coindesk.com/v1/bpi/currentprice/USD.json');
       if (resp.ok) {
@@ -68,7 +81,8 @@ const InvestmentCalculator = () => {
         if (Number.isFinite(val)) return val;
       }
     } catch (_) {}
-    // 3) Try Blockchain.info
+
+    // 4) Try Blockchain.info
     try {
       const resp = await fetch('https://blockchain.info/ticker');
       if (resp.ok) {
@@ -79,6 +93,79 @@ const InvestmentCalculator = () => {
     } catch (_) {}
     throw new Error('Failed to fetch current price from all sources');
   }
+
+  const calculateForecastROI = async () => {
+    const amount = Number(forecastAmount);
+    if (!amount || amount <= 0) {
+      setError('Please enter a valid investment amount.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+      setResult(null);
+
+      // Fetch multi-horizon predictions
+      const predResp = await apiClient.get('/ai/predictions/latest?multi=1');
+      const predictions = predResp?.predictions || predResp?.data?.predictions;
+      
+      if (!predictions || !predictions[forecastHorizon]) {
+        throw new Error('AI predictions not available');
+      }
+
+      const pred = predictions[forecastHorizon];
+      const currentPrice = Number(pred?.current_price);
+      const predictedPrice = Number(pred?.predicted_price);
+      const predictedLow = Number(pred?.predicted_low);
+      const predictedHigh = Number(pred?.predicted_high);
+
+      if (!Number.isFinite(currentPrice) || currentPrice <= 0) {
+        throw new Error('Invalid current price from AI prediction');
+      }
+      if (!Number.isFinite(predictedPrice) || !Number.isFinite(predictedLow) || !Number.isFinite(predictedHigh)) {
+        throw new Error('Invalid predicted prices from AI prediction');
+      }
+
+      // Calculate BTC amount
+      const btcAmount = amount / currentPrice;
+
+      // Calculate scenarios
+      const baseValue = btcAmount * predictedPrice;
+      const lowValue = btcAmount * predictedLow;
+      const highValue = btcAmount * predictedHigh;
+
+      const baseROI = baseValue - amount;
+      const lowROI = lowValue - amount;
+      const highROI = highValue - amount;
+
+      const basePercent = (baseROI / amount) * 100;
+      const lowPercent = (lowROI / amount) * 100;
+      const highPercent = (highROI / amount) * 100;
+
+      setResult({
+        mode: 'forecast',
+        forecast: {
+          amount,
+          btcAmount,
+          currentPrice,
+          horizon: forecastHorizon,
+          scenarios: {
+            base: { price: predictedPrice, value: baseValue, roi: baseROI, percent: basePercent },
+            low: { price: predictedLow, value: lowValue, roi: lowROI, percent: lowPercent },
+            high: { price: predictedHigh, value: highValue, roi: highROI, percent: highPercent },
+          },
+          confidence: Number(pred?.confidence),
+          context: pred.context,
+        },
+      });
+    } catch (err) {
+      setError(err?.message || 'Failed to calculate forecast ROI. Please try again.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const calculateReturn = async () => {
     // Validate rows
@@ -93,6 +180,16 @@ const InvestmentCalculator = () => {
     const invalid = cleaned.find(r => !/^\d{4}$/.test(r.year));
     if (invalid) {
       setError(`Invalid year: ${invalid.year}. Use YYYY format (e.g., 2017).`);
+      return;
+    }
+
+    const currentYear = new Date().getFullYear();
+    const outOfRange = cleaned.find(r => {
+      const y = Number(r.year);
+      return !Number.isFinite(y) || y < 2010 || y > currentYear;
+    });
+    if (outOfRange) {
+      setError(`Year out of range: ${outOfRange.year}. Use a year between 2010 and ${currentYear}.`);
       return;
     }
 
@@ -187,116 +284,299 @@ const InvestmentCalculator = () => {
   };
 
   return (
-    <div className="investment-calculator">
-      <h2>BTC Investment Calculator</h2>
+    <Card className={styles.container}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>BTC Investment Calculator</h2>
+        <div className={styles.modeSelector}>
+          <button
+            type="button"
+            onClick={() => { setMode('historical'); setResult(null); setError(''); }}
+            className={`${styles.modeButton} ${mode === 'historical' ? styles.modeButtonActive : ''}`}
+          >
+            Historical ROI
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMode('forecast'); setResult(null); setError(''); }}
+            className={`${styles.modeButton} ${mode === 'forecast' ? styles.modeButtonActive : ''}`}
+          >
+            Forecast ROI
+          </button>
+        </div>
+      </div>
 
-      {/* Dynamic rows for multiple years */}
-      {investmentEntries.map((row, idx) => (
-        <div className="input-group" key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '8px', alignItems: 'end' }}>
-          <div>
-            <label>Investment Year</label>
-            <input
-              type="number"
-              value={row.year}
-              onChange={(e) => {
-                const v = e.target.value;
-                setInvestmentEntries(prev => prev.map((r, i) => i === idx ? { ...r, year: v } : r));
-              }}
-              placeholder="e.g., 2017"
-            />
-          </div>
-          <div>
-            <label>Amount (USD)</label>
-            <input
-              type="number"
-              value={row.amount}
-              onChange={(e) => {
-                const v = e.target.value;
-                setInvestmentEntries(prev => prev.map((r, i) => i === idx ? { ...r, amount: v } : r));
-              }}
-              placeholder="e.g., 1000"
-            />
-          </div>
-          <div>
-            <button
-              type="button"
-              onClick={() => setInvestmentEntries(prev => prev.filter((_, i) => i !== idx))}
-              disabled={investmentEntries.length === 1}
-              style={{ width: '100%' }}
-            >
-              Remove
+      {mode === 'forecast' ? (
+        <>
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>Investment Details</h3>
+            <p className={styles.sectionDescription}>Uses AI prediction ranges (low/base/high) for selected horizon</p>
+            <div className={styles.inputGrid}>
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>Investment Amount (USD)</label>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={forecastAmount}
+                  onChange={(e) => setForecastAmount(e.target.value)}
+                  placeholder="e.g., 10000"
+                  className={styles.input}
+                />
+              </div>
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>Forecast Horizon</label>
+                <select
+                  value={forecastHorizon}
+                  onChange={(e) => setForecastHorizon(e.target.value)}
+                  className={styles.select}
+                >
+                  <option value="1h">1 Hour</option>
+                  <option value="24h">24 Hours</option>
+                  <option value="7d">7 Days</option>
+                </select>
+              </div>
+            </div>
+            <button onClick={calculateForecastROI} disabled={loading} className={styles.calculateButton}>
+              {loading ? 'Calculating…' : 'Calculate Forecast'}
             </button>
           </div>
-        </div>
-      ))}
+        </>
+      ) : (
+        <>
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>Investment History</h3>
+            <p className={styles.sectionDescription}>Enter your investment year(s) and amount(s) to calculate historical ROI</p>
+            <div className={styles.entriesContainer}>
+              {investmentEntries.map((row, idx) => (
+                <div className={styles.entryRow} key={idx}>
+                  <div className={styles.inputGroup}>
+                    <label className={styles.label}>Year</label>
+                    <input
+                      type="number"
+                      min={2010}
+                      max={new Date().getFullYear()}
+                      step={1}
+                      value={row.year}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setInvestmentEntries(prev => prev.map((r, i) => i === idx ? { ...r, year: v } : r));
+                      }}
+                      placeholder="e.g., 2017"
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label className={styles.label}>Amount (USD)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.01}
+                      value={row.amount}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setInvestmentEntries(prev => prev.map((r, i) => i === idx ? { ...r, amount: v } : r));
+                      }}
+                      placeholder="e.g., 1000"
+                      className={styles.input}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setInvestmentEntries(prev => prev.filter((_, i) => i !== idx))}
+                    disabled={investmentEntries.length === 1}
+                    className={styles.removeButton}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className={styles.actionButtons}>
+              <button type="button" onClick={() => setInvestmentEntries(prev => [...prev, { year: '', amount: '' }])} className={styles.addButton}>
+                + Add Year
+              </button>
+              <button onClick={calculateReturn} disabled={loading} className={styles.calculateButton}>
+                {loading ? 'Calculating…' : 'Calculate'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+      {error && <div className={styles.error}>{error}</div>}
+      
+      {result && result.mode === 'forecast' && (
+        <div className={styles.resultSection}>
+          <h3 className={styles.resultTitle}>Forecast ROI Calculation</h3>
+          
+          <div className={styles.summaryCard}>
+            <div className={styles.summaryGrid}>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Investment</span>
+                <span className={styles.summaryValue}>{toUsd.format(result.forecast.amount)}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>BTC Amount</span>
+                <span className={styles.summaryValue}>{result.forecast.btcAmount.toFixed(8)} BTC</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Current Price</span>
+                <span className={styles.summaryValue}>{toUsd.format(result.forecast.currentPrice)}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Horizon</span>
+                <span className={styles.summaryValue}>{result.forecast.horizon.toUpperCase()}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Confidence</span>
+                <span className={styles.summaryValue}>{(result.forecast.confidence * 100).toFixed(1)}%</span>
+              </div>
+            </div>
+          </div>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-        <button type="button" onClick={() => setInvestmentEntries(prev => [...prev, { year: '', amount: '' }])}>
-          + Add Year
-        </button>
-        <button onClick={calculateReturn} disabled={loading}>
-          {loading ? 'Calculating…' : 'Calculate'}
-        </button>
-      </div>
-      {error && <p className="error">{error}</p>}
-      {result && (
-        <div className="result">
-          <h3>Calculation Result</h3>
-
-          {/* Breakdown */}
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <h4 className={styles.subsectionTitle}>Projected Scenarios</h4>
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: '6px' }}>Year</th>
-                  <th style={{ textAlign: 'right', padding: '6px' }}>Amount (USD)</th>
-                  <th style={{ textAlign: 'right', padding: '6px' }}>Avg Price</th>
-                  <th style={{ textAlign: 'right', padding: '6px' }}>BTC Bought</th>
-                  <th style={{ textAlign: 'right', padding: '6px' }}>Value Now</th>
+                  <th className={styles.tableHeader}>Scenario</th>
+                  <th className={`${styles.tableHeader} ${styles.textRight}`}>Price</th>
+                  <th className={`${styles.tableHeader} ${styles.textRight}`}>Value</th>
+                  <th className={`${styles.tableHeader} ${styles.textRight}`}>ROI</th>
+                  <th className={`${styles.tableHeader} ${styles.textRight}`}>ROI %</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className={styles.tableRowBearish}>
+                  <td className={styles.tableCell}>Bearish (Low)</td>
+                  <td className={`${styles.tableCell} ${styles.textRight}`}>{toUsd.format(result.forecast.scenarios.low.price)}</td>
+                  <td className={`${styles.tableCell} ${styles.textRight}`}>{toUsd.format(result.forecast.scenarios.low.value)}</td>
+                  <td className={`${styles.tableCell} ${styles.textRight} ${result.forecast.scenarios.low.roi >= 0 ? styles.positive : styles.negative}`}>
+                    {toUsd.format(result.forecast.scenarios.low.roi)}
+                  </td>
+                  <td className={`${styles.tableCell} ${styles.textRight} ${result.forecast.scenarios.low.percent >= 0 ? styles.positive : styles.negative}`}>
+                    {result.forecast.scenarios.low.percent.toFixed(2)}%
+                  </td>
+                </tr>
+                <tr className={styles.tableRowBase}>
+                  <td className={`${styles.tableCell} ${styles.bold}`}>Base Case</td>
+                  <td className={`${styles.tableCell} ${styles.textRight} ${styles.bold}`}>{toUsd.format(result.forecast.scenarios.base.price)}</td>
+                  <td className={`${styles.tableCell} ${styles.textRight} ${styles.bold}`}>{toUsd.format(result.forecast.scenarios.base.value)}</td>
+                  <td className={`${styles.tableCell} ${styles.textRight} ${styles.bold} ${result.forecast.scenarios.base.roi >= 0 ? styles.positive : styles.negative}`}>
+                    {toUsd.format(result.forecast.scenarios.base.roi)}
+                  </td>
+                  <td className={`${styles.tableCell} ${styles.textRight} ${styles.bold} ${result.forecast.scenarios.base.percent >= 0 ? styles.positive : styles.negative}`}>
+                    {result.forecast.scenarios.base.percent.toFixed(2)}%
+                  </td>
+                </tr>
+                <tr className={styles.tableRowBullish}>
+                  <td className={styles.tableCell}>Bullish (High)</td>
+                  <td className={`${styles.tableCell} ${styles.textRight}`}>{toUsd.format(result.forecast.scenarios.high.price)}</td>
+                  <td className={`${styles.tableCell} ${styles.textRight}`}>{toUsd.format(result.forecast.scenarios.high.value)}</td>
+                  <td className={`${styles.tableCell} ${styles.textRight} ${result.forecast.scenarios.high.roi >= 0 ? styles.positive : styles.negative}`}>
+                    {toUsd.format(result.forecast.scenarios.high.roi)}
+                  </td>
+                  <td className={`${styles.tableCell} ${styles.textRight} ${result.forecast.scenarios.high.percent >= 0 ? styles.positive : styles.negative}`}>
+                    {result.forecast.scenarios.high.percent.toFixed(2)}%
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {result.forecast.context && (
+            <div className={styles.contextCard}>
+              <h4 className={styles.contextTitle}>Market Context</h4>
+              <div className={styles.contextGrid}>
+                <div className={styles.contextItem}>
+                  <span className={styles.contextLabel}>RSI:</span>
+                  <span className={styles.contextValue}>{result.forecast.context.rsi.toFixed(1)} ({result.forecast.context.rsi_state})</span>
+                </div>
+                <div className={styles.contextItem}>
+                  <span className={styles.contextLabel}>Trend:</span>
+                  <span className={styles.contextValue}>{result.forecast.context.trend}</span>
+                </div>
+                <div className={styles.contextItem}>
+                  <span className={styles.contextLabel}>Volatility:</span>
+                  <span className={styles.contextValue}>{result.forecast.context.volatility.toFixed(2)}% ({result.forecast.context.volatility_regime})</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <p className={styles.disclaimer}>
+            ⚠️ Forecast ROI is based on AI predictions and should not be considered investment advice. 
+            Actual results may vary significantly. Past performance does not guarantee future results.
+          </p>
+        </div>
+      )}
+      
+      {result && result.mode !== 'forecast' && (
+        <div className={styles.resultSection}>
+          <h3 className={styles.resultTitle}>Historical ROI Result</h3>
+
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th className={styles.tableHeader}>Year</th>
+                  <th className={`${styles.tableHeader} ${styles.textRight}`}>Amount (USD)</th>
+                  <th className={`${styles.tableHeader} ${styles.textRight}`}>Avg Price</th>
+                  <th className={`${styles.tableHeader} ${styles.textRight}`}>BTC Bought</th>
+                  <th className={`${styles.tableHeader} ${styles.textRight}`}>Value Now</th>
                 </tr>
               </thead>
               <tbody>
                 {result.rows.map((r, i) => (
                   <tr key={i}>
-                    <td style={{ padding: '6px' }}>{r.year}</td>
-                    <td style={{ padding: '6px', textAlign: 'right' }}>{toUsd.format(r.amount)}</td>
-                    <td style={{ padding: '6px', textAlign: 'right' }}>{toUsd.format(r.yearlyAverage)}</td>
-                    <td style={{ padding: '6px', textAlign: 'right' }}>{Number(r.btcBought).toFixed(8)}</td>
-                    <td style={{ padding: '6px', textAlign: 'right' }}>{toUsd.format(r.currentValue)}</td>
+                    <td className={styles.tableCell}>{r.year}</td>
+                    <td className={`${styles.tableCell} ${styles.textRight}`}>{toUsd.format(r.amount)}</td>
+                    <td className={`${styles.tableCell} ${styles.textRight}`}>{toUsd.format(r.yearlyAverage)}</td>
+                    <td className={`${styles.tableCell} ${styles.textRight}`}>{Number(r.btcBought).toFixed(8)}</td>
+                    <td className={`${styles.tableCell} ${styles.textRight}`}>{toUsd.format(r.currentValue)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          {/* Totals */}
-          <div style={{ marginTop: 12 }}>
-            <p>
-              Total Invested: <strong>{toUsd.format(result.totals.totalInvested)}</strong>
-            </p>
-            <p>
-              Total BTC: <strong>{Number(result.totals.totalBTC).toFixed(8)} BTC</strong>
-            </p>
-            <p>
-              Current Price: <strong>{toUsd.format(result.meta.currentPrice)}</strong>
-            </p>
-            <p>
-              Current Value: <strong>{toUsd.format(result.totals.totalCurrentValue)}</strong>
-            </p>
-            <p>
-              ROI: <strong>{toUsd.format(result.totals.returnOnInvestment)}</strong> ({Number(result.totals.returnPercentage).toFixed(2)}%)
-            </p>
-            <p>
-              Avg Cost Basis: <strong>{toUsd.format(result.totals.avgCostBasis)}</strong>
-            </p>
+          <div className={styles.totalsSection}>
+            <h4 className={styles.subsectionTitle}>Summary</h4>
+            <div className={styles.totalsGrid}>
+              <div className={styles.totalItem}>
+                <span className={styles.totalLabel}>Total Invested</span>
+                <span className={styles.totalValue}>{toUsd.format(result.totals.totalInvested)}</span>
+              </div>
+              <div className={styles.totalItem}>
+                <span className={styles.totalLabel}>Total BTC</span>
+                <span className={styles.totalValue}>{Number(result.totals.totalBTC).toFixed(8)} BTC</span>
+              </div>
+              <div className={styles.totalItem}>
+                <span className={styles.totalLabel}>Current Price</span>
+                <span className={styles.totalValue}>{toUsd.format(result.meta.currentPrice)}</span>
+              </div>
+              <div className={styles.totalItem}>
+                <span className={styles.totalLabel}>Current Value</span>
+                <span className={styles.totalValue}>{toUsd.format(result.totals.totalCurrentValue)}</span>
+              </div>
+              <div className={styles.totalItem}>
+                <span className={styles.totalLabel}>ROI</span>
+                <span className={`${styles.totalValue} ${result.totals.returnOnInvestment >= 0 ? styles.positive : styles.negative}`}>
+                  {toUsd.format(result.totals.returnOnInvestment)} ({Number(result.totals.returnPercentage).toFixed(2)}%)
+                </span>
+              </div>
+              <div className={styles.totalItem}>
+                <span className={styles.totalLabel}>Avg Cost Basis</span>
+                <span className={styles.totalValue}>{toUsd.format(result.totals.avgCostBasis)}</span>
+              </div>
+            </div>
           </div>
 
-          <p style={{ fontSize: '0.85rem', color: '#bbb' }}>
+          <p className={styles.disclaimer}>
             Sources: Backend proxy (if available), CoinGecko (daily prices), CryptoCompare (fallback), CoinDesk/Blockchain.info (current price fallback)
           </p>
         </div>
       )}
-    </div>
+    </Card>
   );
 };
 
